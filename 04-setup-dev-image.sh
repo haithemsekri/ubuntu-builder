@@ -5,7 +5,7 @@ source 00-setup-env.sh
 SRC_TAR_FILE=$TARGET_TAR_FILE
 DISK_FILE=$DEV_DISK_FILE
 DISK_TAR_FILE=$DEV_TAR_FILE
-DISK_SIZE_MB=1024
+DISK_SIZE_MB=4096
 [ ! -f $SRC_TAR_FILE ] &&  echo "$SRC_TAR_FILE not found" && exit 0
 
 create_rootfs_disk() {
