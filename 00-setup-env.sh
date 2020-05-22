@@ -14,3 +14,6 @@
 
 [ -z $DEV_DISK_FILE ] && DEV_DISK_FILE="$(pwd)/build/ubuntu-18.04-dev-arm64.$EXT_FS_TYPE"
 [ -z $DEV_TAR_FILE ]  && DEV_TAR_FILE="$(pwd)/cache/ubuntu-18.04-dev-arm64.tar.gz"
+
+
+[ -z $TARGET_ROOTFS_DISK_FILE ] && TARGET_ROOTFS_DISK_FILE="$(pwd)/build/ubuntu-18.04-rootfs-arm64.$EXT_FS_TYPE"

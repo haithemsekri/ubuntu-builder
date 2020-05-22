@@ -39,7 +39,6 @@ apt-get -y upgrade
 apt-get -y install --no-install-recommends util-linux nano openssh-server
 apt-get -y install --no-install-recommends systemd udev systemd-sysv
 apt-get -y install --no-install-recommends net-tools iproute2 iputils-ping ethtool isc-dhcp-client
-rm /*.sh
 EOF
    export ROOTFS_DISK_PATH=$DISK_FILE
    source 12-chroot-run.sh

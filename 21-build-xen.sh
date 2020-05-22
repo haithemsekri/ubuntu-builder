@@ -74,10 +74,10 @@ EOF
    fi
 
    if [ -d $TMP_DIR/build/xen-overlay ]; then
-     cd $TMP_DIR/build/xen-overlay
-     sudo tar -czf $XEN_IMAGE_TAR_FILE .
-     cd -
-     sudo chmod 666 $XEN_IMAGE_TAR_FILE
+      cd $TMP_DIR/build/xen-overlay
+      sudo tar -czf $XEN_IMAGE_TAR_FILE .
+      cd -
+      sudo chmod 666 $XEN_IMAGE_TAR_FILE
    fi
 
    cleanup_on_exit
