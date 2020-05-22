@@ -26,25 +26,25 @@ chroot_umount_pseudo_fs () {
 }
 
 cleanup_on_exit () {
-   if [ -d $TMP_DIR/bin ]; then
+   if [ -d $TMP_DIR ]; then
       echo "cleanup_on_exit"
       sync
       chroot_umount_pseudo_fs
       sudo umount $TMP_DIR
       rm -rf $TMP_DIR
-      #e2fsck -f -y $ROOTFS_DISK_PATH
    fi
+}
+
+chroot_run_script () {
+   CHROOT_SCRIPT_PATH=$1
+   [ ! -f $CHROOT_SCRIPT_PATH ] &&  echo "Invalid arg1 for script to run in chroot" && exit 0
+   sudo cp $CHROOT_SCRIPT_PATH $TMP_DIR/chroot-script.sh
+   sudo chmod 755 $TMP_DIR/chroot-script.sh
+   sudo chroot $TMP_DIR /bin/bash /chroot-script.sh
+   sudo rm -rf $TMP_DIR/chroot-script.sh
 }
 
 trap cleanup_on_exit EXIT
 
 [ ! -f $TMP_DIR/usr/bin/qemu-aarch64-static ] && sudo cp /usr/bin/qemu-aarch64-static $TMP_DIR/usr/bin/qemu-aarch64-static
 chroot_mount_pseudo_fs
-
-chroot_run_script () {
-   CHROOT_SCRIPT_PATH=$1
-   [ ! -f $CHROOT_SCRIPT_PATH ] &&  echo "invalid arg1 for script to run in chroot" && exit 0
-   sudo cp $CHROOT_SCRIPT_PATH $TMP_DIR/chroot-script.sh
-   sudo chmod 755 $TMP_DIR/chroot-script.sh
-   sudo chroot $TMP_DIR /bin/sh /chroot-script.sh
-}
