@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source 00-setup-env.sh
-source 20-setup-xen-env.sh
+source 00-rootfs-setup-env.sh
+source 40-xen-setup-env.sh
 
 [ ! -f $DEV_DISK_FILE ] &&  echo "$DEV_DISK_FILE not found" && exit 0
 [ ! -f $DL_XEN_FILE ] && wget $DL_XEN_URL -O $DL_XEN_FILE

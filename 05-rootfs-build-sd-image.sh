@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source 00-setup-env.sh
-source 20-setup-xen-env.sh
+source 00-rootfs-setup-env.sh
+source 40-xen-setup-env.sh
 
 [ ! -f $XEN_IMAGE_TAR_FILE ] &&  echo "$XEN_IMAGE_TAR_FILE not found" && exit 0
 [ ! -f $TARGET_DISK_FILE ] &&  echo "$TARGET_DISK_FILE not found" && exit 0

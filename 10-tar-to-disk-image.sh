@@ -10,7 +10,7 @@ TMP_DIR="$(pwd)/tar-to-disk-image.tmp"
 [ -z $DEST_DISK_SIZE ] &&  echo "Invalid arg3 for destination file size in Mega" && exit 0
 [ ! -d $TMP_DIR ] && mkdir -p $TMP_DIR
 
-source 00-setup-env.sh
+source 00-rootfs-setup-env.sh
 
 dd if=/dev/zero of=$DEST_DISK_FILE bs=1M count=$DEST_DISK_SIZE
 sync
