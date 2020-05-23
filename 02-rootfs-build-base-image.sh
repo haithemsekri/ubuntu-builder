@@ -3,7 +3,7 @@
 [ ! -d "cache" ] && mkdir cache
 [ ! -d "build" ] && mkdir build
 
-source 00-setup-env.sh
+source 00-rootfs-setup-env.sh
 
 SRC_TAR_FILE=$DL_ROOTFS_FILE
 DISK_FILE=$BASE_DISK_FILE
