@@ -3,7 +3,7 @@
 source 00-rootfs-setup-env.sh
 source 40-xen-setup-env.sh
 
-[ ! -f $XEN_IMAGE_TAR_FILE ] &&  echo "$XEN_IMAGE_TAR_FILE not found" && exit 0
+[ ! -f $XEN_IMAGE_FILE ] &&  echo "$XEN_IMAGE_FILE not found" && exit 0
 [ ! -f $TARGET_DISK_FILE ] &&  echo "$TARGET_DISK_FILE not found" && exit 0
 
 echo "Building: $TARGET_ROOTFS_DISK_FILE"
@@ -47,7 +47,7 @@ ln -s /run /var/
 EOF
 export ROOTFS_DISK_PATH=$TARGET_ROOTFS_DISK_FILE
 source 12-chroot-run.sh
-sudo tar -xzf $XEN_IMAGE_TAR_FILE -C $TMP_DIR
+sudo tar -xzf $XEN_IMAGE_FILE -C $TMP_DIR
 chroot_run_script $CHROOT_SCRIPT
 rm -rf $CHROOT_SCRIPT
 cleanup_on_exit
