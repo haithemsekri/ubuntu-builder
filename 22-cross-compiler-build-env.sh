@@ -4,13 +4,13 @@ source 20-cross-compiler-setup-env.sh
 [ ! -d $TARGET_COMPILER_PATH ] && echo "$TARGET_COMPILER_PATH : not found"  && exit 0
 
 export TARGET_COMPILER="aarch64-linux-gnu"
+export PATH="$PATH:$TARGET_COMPILER_PATH/bin"
+export STAGING_DIR="$TARGET_COMPILER_PATH/aarch64-linux-gnu"
+export ARCH="arm64"
+export CROSS_COMPILE="$TARGET_COMPILER-"
 
 ####################### env setup
 TARGET_COMPILER_ENV=$(cat <<EOF
-PATH="$PATH:$TARGET_COMPILER_PATH/bin" \
-STAGING_DIR="$TARGET_COMPILER_PATH/aarch64-linux-gnu" \
-ARCH=arm64 \
-CROSS_COMPILE="$TARGET_COMPILER-" \
 AR="$TARGET_COMPILER-ar" \
 AS="$TARGET_COMPILER-as" \
 LD="$TARGET_COMPILER-ld" \
@@ -20,7 +20,7 @@ GCC="$TARGET_COMPILER-gcc" \
 CPP="$TARGET_COMPILER-cpp" \
 CXX="$TARGET_COMPILER-g++" \
 FC="$TARGET_COMPILER-gfortran" \
-F77="$CROSS_COMPITARGET_COMPILERLE-gfortran" \
+F77="$TARGET_COMPILER-gfortran" \
 RANLIB="$TARGET_COMPILER-ranlib" \
 READELF="$TARGET_COMPILER-readelf" \
 STRIP="$TARGET_COMPILER-strip" \
@@ -64,7 +64,3 @@ CROSS_CONFIG_ARGS=$(cat <<EOF
 EOF
 )
 
-export PATH="$PATH:$TARGET_COMPILER_PATH/bin"
-export STAGING_DIR="$TARGET_COMPILER_PATH/aarch64-linux-gnu"
-export ARCH="arm64"
-export CROSS_COMPILE="$TARGET_COMPILER-"

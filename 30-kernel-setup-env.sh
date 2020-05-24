@@ -11,4 +11,4 @@
 
 [ -z $KERNEL_DOMU_BUILD_PATH ] && KERNEL_DOMU_BUILD_PATH="$(pwd)/build/linux-4.19.75"
 [ -z $KERNEL_DOMU_IMAGE_FILE ] && KERNEL_DOMU_IMAGE_FILE="$(pwd)/cache/linux-4.19.75-domu.tar.gz"
-[ -z $KERNEL_DOMU_BIN_FILE ] && KERNEL_DOMU_BIN_FILE="$KERNEL_DOMU_IMAGE_FILE/arch/arm64/boot/Image"
+[ -z $KERNEL_DOMU_BIN_FILE ] && KERNEL_DOMU_BIN_FILE="$KERNEL_DOMU_BUILD_PATH/arch/arm64/boot/Image"

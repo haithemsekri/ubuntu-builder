@@ -1,60 +1,60 @@
 #!/bin/bash
 
+source 30-kernel-setup-env.sh
+
+[ ! -f $KERNEL_DL_FILE ] && wget $KERNEL_DL_URL -O $KERNEL_DL_FILE
+[ ! -f $KERNEL_DL_FILE ] && echo "$KERNEL_DL_FILE : not found"  && exit 0
+
 [ ! -d "cache" ] && mkdir cache
 [ ! -d "build" ] && mkdir build
 
-source 00-rootfs-setup-env.sh
-
-SRC_TAR_FILE=$DL_ROOTFS_FILE
-DISK_FILE=$BASE_DISK_FILE
-DISK_TAR_FILE=$BASE_TAR_FILE
-DISK_SIZE_MB=512
-[ ! -f $SRC_TAR_FILE ] &&  echo "$SRC_TAR_FILE not found" && exit 0
-
-create_rootfs_disk() {
-if [ -f $DISK_TAR_FILE ]; then
-   echo "Based on: $DISK_TAR_FILE"
-   ./10-tar-to-disk-image.sh $DISK_TAR_FILE $DISK_FILE $DISK_SIZE_MB
-else
-   echo "Based on: $SRC_TAR_FILE"
-   ./10-tar-to-disk-image.sh $SRC_TAR_FILE $DISK_FILE $DISK_SIZE_MB
-   CHROOT_SCRIPT="/tmp/chroot-script.sh"
-   rm -rf  $CHROOT_SCRIPT
-cat <<EOF > $CHROOT_SCRIPT
-#!/bin/bash
-echo "nameserver 8.8.8.8" > /etc/resolv.conf
-echo "nameserver 2001:4860:4860::8888" >> /etc/resolv.conf
-echo "LANG=en_US.UTF-8" > /etc/default/locale
-echo "APT::Install-Recommends "0";" >> /etc/apt/apt.conf.d/30norecommends
-echo "APT::Install-Suggests "0";" >> /etc/apt/apt.conf.d/30norecommends
-
-passwd
-apt-get -y clean
-apt-get -y update
-apt-get -y install --no-install-recommends apt-utils dialog
-apt-get -y install --no-install-recommends locales
-locale-gen en_US.UTF-8
-
-apt-get -y upgrade
-apt-get -y install --no-install-recommends util-linux nano openssh-server
-apt-get -y install --no-install-recommends systemd udev systemd-sysv
-apt-get -y install --no-install-recommends net-tools iproute2 iputils-ping ethtool isc-dhcp-client
-EOF
-   export ROOTFS_DISK_PATH=$DISK_FILE
-   source 12-chroot-run.sh
-   chroot_run_script $CHROOT_SCRIPT
-   rm -rf $CHROOT_SCRIPT
-   sudo rsync -avlz  overlays/  ${TMP_DIR}/
-   cleanup_on_exit
+if [ "$1" == "--rebuild" ]; then
+   echo "delete $KERNEL_DOMU_IMAGE_FILE"
+   rm -rf "$KERNEL_DOMU_IMAGE_FILE"
 fi
-}
 
-backup_rootfs_disk() {
-   echo "Based on: $DISK_FILE"
-   ./11-disk-image-to-tar.sh $DISK_FILE $DISK_TAR_FILE
-}
+if [ "$1" == "--clean-rebuild" ]; then
+   echo "delete $KERNEL_DOMU_BUILD_PATH"
+   rm -rf "$KERNEL_DOMU_BUILD_PATH"
+   echo "delete $KERNEL_DOMU_IMAGE_FILE"
+   rm -rf "$KERNEL_DOMU_IMAGE_FILE"
+fi
 
-echo "Building $DISK_FILE"
-[ ! -f $DISK_FILE ] && create_rootfs_disk
-echo "Building $DISK_TAR_FILE"
-[ ! -f $DISK_TAR_FILE ] && backup_rootfs_disk
+echo "Setup: $KERNEL_DOMU_BUILD_PATH"
+if [ ! -d $KERNEL_DOMU_BUILD_PATH ]; then
+   echo "Based on: $KERNEL_DL_FILE"
+   mkdir tar.gz.tmp
+   tar -xzf $KERNEL_DL_FILE -C tar.gz.tmp/
+   mv tar.gz.tmp/* $KERNEL_DOMU_BUILD_PATH
+   rm -rf tar.gz.tmp
+
+   patch $KERNEL_DOMU_BUILD_PATH/include/xen/interface/io/blkif.h 32-kernel-patch-blkif.patch
+   cp 33-kernel-config-domu.config $KERNEL_DOMU_BUILD_PATH/.config
+fi
+
+[ ! -d $KERNEL_DOMU_BUILD_PATH ] && echo "$KERNEL_DOMU_BUILD_PATH : not found"  && exit 0
+
+echo "Building: $KERNEL_DOMU_IMAGE_FILE"
+if [ ! -f $KERNEL_DOMU_IMAGE_FILE ]; then
+   echo "Based on: $KERNEL_DOMU_IMAGE_FILE"
+   source 22-cross-compiler-build-env.sh
+
+   make menuconfig -C $KERNEL_DOMU_BUILD_PATH
+   make -j 20 -C $KERNEL_DOMU_BUILD_PATH
+
+   [ ! -f $KERNEL_DOMU_BIN_FILE ] && echo "$KERNEL_DOMU_BIN_FILE : not found"  && exit 0
+
+   rm -rf kernel.domu.overlay
+
+   mkdir -p kernel.domu.overlay/boot
+   cp $KERNEL_DOMU_BIN_FILE kernel.domu.overlay/boot/kernel.bin
+
+   mkdir -p kernel.domu.overlay/lib/modules
+   make modules_install -C $KERNEL_DOMU_BUILD_PATH INSTALL_MOD_PATH=kernel.domu.overlay/lib/modules/ > kernel.domu.overlay/lib/modules/modules_install.log
+
+   cd kernel.domu.overlay
+   tar -czf $KERNEL_DOMU_IMAGE_FILE .
+   cd -
+   rm -rf kernel.domu.overlay
+fi
+

@@ -1,7 +1,13 @@
 #!/bin/bash
 
+source 00-rootfs-setup-env.sh
+
+[ ! -d "sources" ] && mkdir sources
 [ ! -d "cache" ] && mkdir cache
 [ ! -d "build" ] && mkdir build
+
+[ ! -f $DL_ROOTFS_FILE ] && wget $DL_ROOTFS_URL -O $DL_ROOTFS_FILE
+[ ! -f $DL_ROOTFS_FILE ] &&  echo "$DL_ROOTFS_FILE not found" && exit 0
 
 source 00-rootfs-setup-env.sh
 
@@ -9,7 +15,6 @@ SRC_TAR_FILE=$DL_ROOTFS_FILE
 DISK_FILE=$BASE_DISK_FILE
 DISK_TAR_FILE=$BASE_TAR_FILE
 DISK_SIZE_MB=512
-[ ! -f $SRC_TAR_FILE ] &&  echo "$SRC_TAR_FILE not found" && exit 0
 
 create_rootfs_disk() {
 if [ -f $DISK_TAR_FILE ]; then
@@ -44,7 +49,7 @@ EOF
    source 12-chroot-run.sh
    chroot_run_script $CHROOT_SCRIPT
    rm -rf $CHROOT_SCRIPT
-   sudo rsync -avlz  overlays/  ${TMP_DIR}/
+   sudo rsync -avlz overlays/ ${TMP_DIR}/
    cleanup_on_exit
 fi
 }

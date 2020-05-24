@@ -2,10 +2,11 @@
 
 source 30-kernel-setup-env.sh
 
+[ ! -f $KERNEL_DL_FILE ] && wget $KERNEL_DL_URL -O $KERNEL_DL_FILE
+[ ! -f $KERNEL_DL_FILE ] && echo "$KERNEL_DL_FILE : not found"  && exit 0
+
 [ ! -d "cache" ] && mkdir cache
 [ ! -d "build" ] && mkdir build
-
-[ ! -f $KERNEL_DL_FILE ] && echo "$KERNEL_DL_FILE : not found"  && exit 0
 
 if [ "$1" == "--rebuild" ]; then
    echo "delete $KERNEL_DOM0_IMAGE_FILE"
@@ -39,17 +40,23 @@ if [ ! -f $KERNEL_DOM0_IMAGE_FILE ]; then
    source 22-cross-compiler-build-env.sh
 
    make menuconfig -C $KERNEL_DOM0_BUILD_PATH
-
    make -j 20 -C $KERNEL_DOM0_BUILD_PATH
+
    [ ! -f $KERNEL_DOM0_BIN_FILE ] && echo "$KERNEL_DOM0_BIN_FILE : not found"  && exit 0
    [ ! -f $KERNEL_DOM0_DTB_FILE ] && echo "$KERNEL_DOM0_DTB_FILE : not found"  && exit 0
 
+   rm -rf kernel.dom0.overlay
    mkdir -p kernel.dom0.overlay/boot
+   mkdir -p kernel.dom0.overlay/lib/modules
+
    cp $KERNEL_DOM0_BIN_FILE kernel.dom0.overlay/boot/kernel.bin
    cp $KERNEL_DOM0_DTB_FILE kernel.dom0.overlay/boot/device-tree.dtb
+   cp $KERNEL_DOM0_BOOT_FILE kernel.dom0.overlay/boot/boot-kernel.cmd
    mkimage -C none -A arm -T script -d $KERNEL_DOM0_BOOT_FILE kernel.dom0.overlay/boot/boot.scr
+   make modules_install -C $KERNEL_DOM0_BUILD_PATH INSTALL_MOD_PATH=kernel.dom0.overlay/lib/modules/ > kernel.dom0.overlay/lib/modules/modules_install.log
    cd kernel.dom0.overlay
    tar -czf $KERNEL_DOM0_IMAGE_FILE .
    cd -
    rm -rf kernel.dom0.overlay
 fi
+
