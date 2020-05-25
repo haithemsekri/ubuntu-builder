@@ -2,7 +2,7 @@
 
 [ -z $XEN_DL_FILE ] && XEN_DL_FILE="$(pwd)/sources/xen-4.11.4.tar.gz"
 [ -z $XEN_DL_URL ]  && XEN_DL_URL="https://downloads.xenproject.org/release/xen/4.11.4/xen-4.11.4.tar.gz"
-[ -z $XEN_IMAGE_NAME ]  && XEN_IMAGE_NAME="xen-4.11.4"
+[ -z $XEN_IMAGE_NAME ]  && XEN_IMAGE_NAME="xen-4.11.4-aarch64-opipc2"
 [ -z $XEN_IMAGE_FILE ]  && XEN_IMAGE_FILE="$(pwd)/cache/$XEN_IMAGE_NAME.tar.gz"
 [ -z $XEN_TAR_DIR_NAME ]  && XEN_TAR_DIR_NAME="xen-4.11.4"
 

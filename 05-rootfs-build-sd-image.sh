@@ -1,6 +1,7 @@
 #!/bin/bash
 
 source 00-rootfs-setup-env.sh
+source 30-kernel-setup-env.sh
 source 40-xen-setup-env.sh
 
 [ ! -f $XEN_IMAGE_FILE ] &&  echo "$XEN_IMAGE_FILE not found" && exit 0
@@ -45,6 +46,9 @@ EOF
 
 export ROOTFS_DISK_PATH=$TARGET_ROOTFS_DISK_FILE
 source 12-chroot-run.sh
+echo "Add Overlays: $KERNEL_DOM0_IMAGE_FILE"
+sudo tar -xzf $KERNEL_DOM0_IMAGE_FILE -C $TMP_DIR
+echo "Add Overlays: $XEN_IMAGE_FILE"
 sudo tar -xzf $XEN_IMAGE_FILE -C $TMP_DIR
 sudo rsync -avlz  overlays/  ${TMP_DIR}/
 chroot_run_script $CHROOT_SCRIPT
