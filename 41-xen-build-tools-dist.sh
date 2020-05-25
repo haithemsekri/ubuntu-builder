@@ -4,8 +4,8 @@ source 00-rootfs-setup-env.sh
 source 40-xen-setup-env.sh
 
 [ ! -f $DEV_DISK_FILE ] &&  echo "$DEV_DISK_FILE not found" && exit 0
-[ ! -f $DL_XEN_FILE ] && wget $DL_XEN_URL -O $DL_XEN_FILE
-[ ! -f $DL_XEN_FILE ] &&  echo "$DL_XEN_FILE not found" && exit 0
+[ ! -f $XEN_DL_FILE ] && wget $XEN_DL_URL -O $XEN_DL_FILE
+[ ! -f $XEN_DL_FILE ] &&  echo "$XEN_DL_FILE not found" && exit 0
 
 build_xen() {
 
@@ -63,11 +63,11 @@ EOF
       [ ! -d $TMP_DIR/build ] && sudo mkdir -p $TMP_DIR/build
 
       sudo rm -rf $TMP_DIR/build/xen-tools
-      sudo tar -xzf $DL_XEN_FILE -C $TMP_DIR/build/
+      sudo tar -xzf $XEN_DL_FILE -C $TMP_DIR/build/
       sudo mv $TMP_DIR/build/$XEN_TAR_DIR_NAME $TMP_DIR/build/xen-tools
 
       sudo rm -rf $TMP_DIR/build/xen-dist
-      sudo tar -xzf $DL_XEN_FILE -C $TMP_DIR/build/
+      sudo tar -xzf $XEN_DL_FILE -C $TMP_DIR/build/
       sudo mv $TMP_DIR/build/$XEN_TAR_DIR_NAME $TMP_DIR/build/xen-dist
 
       chroot_run_script $CHROOT_SCRIPT
@@ -75,9 +75,9 @@ EOF
 
    if [ -d $TMP_DIR/build/xen-overlay ]; then
       cd $TMP_DIR/build/xen-overlay
-      sudo tar -czf $XEN_IMAGE_TAR_FILE .
+      sudo tar -czf $XEN_IMAGE_FILE .
       cd -
-      sudo chmod 666 $XEN_IMAGE_TAR_FILE
+      sudo chmod 666 $XEN_IMAGE_FILE
    fi
 
    cleanup_on_exit
@@ -85,9 +85,9 @@ EOF
 }
 
 if [ "$1" == "--rebuild" ]; then
-   echo "delete $XEN_IMAGE_TAR_FILE"
-   rm -rf "$XEN_IMAGE_TAR_FILE"
+   echo "delete $XEN_IMAGE_FILE"
+   rm -rf "$XEN_IMAGE_FILE"
 fi
 
-echo "Building $XEN_IMAGE_TAR_FILE"
-[ ! -f $XEN_IMAGE_TAR_FILE ] && build_xen $1
+echo "Building $XEN_IMAGE_FILE"
+[ ! -f $XEN_IMAGE_FILE ] && build_xen $1

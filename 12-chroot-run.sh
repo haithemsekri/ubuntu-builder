@@ -26,10 +26,12 @@ chroot_umount_pseudo_fs () {
 }
 
 cleanup_on_exit () {
-   if [ -d $TMP_DIR ]; then
+   MTAB_ENTRY="$(mount | egrep "$ROOTFS_DISK_PATH" | egrep "$TMP_DIR")"
+   if [ ! -z "$MTAB_ENTRY" ]; then
       echo "cleanup_on_exit"
       sync
       chroot_umount_pseudo_fs
+      sudo chroot $TMP_DIR /bin/bash -c "chown -R root:root /; rm -rf /tmp/*; rm -rf /sys/*; rm -rf /proc/*"
       sudo umount $TMP_DIR
       rm -rf $TMP_DIR
    fi
