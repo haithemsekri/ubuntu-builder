@@ -17,3 +17,4 @@
 
 
 [ -z $TARGET_ROOTFS_DISK_FILE ] && TARGET_ROOTFS_DISK_FILE="$(pwd)/build/ubuntu-18.04-rootfs-arm64.$EXT_FS_TYPE"
+[ -z $TARGET_BOOTFS_IMAGE ] && TARGET_BOOTFS_IMAGE="$(pwd)/build/bootfs.tar.gz"

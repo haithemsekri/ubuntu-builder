@@ -19,6 +19,7 @@ if [ ! -d $TARGET_COMPILER_PATH ]; then
 echo "Setup target-cc: $TARGET_COMPILER_PATH"
 mkdir tar.xf.tmp
 tar -xf $DL_COMPILER_FILE -C tar.xf.tmp/
+sync
 mv tar.xf.tmp/* $TARGET_COMPILER_PATH
 rm -rf tar.xf.tmp
 fi
@@ -46,7 +47,9 @@ if [ ! -d $SYSROOT_PATH ]; then
    [ -d $TMP_DIR/usr/local/lib  ] && echo "Installing $TMP_DIR/usr/local/lib ---> $SYSROOT_PATH/usr/local/"  && cp -r $TMP_DIR/usr/local/lib $SYSROOT_PATH/usr/local/
    [ -d $TMP_DIR/usr/local/include  ] && echo "Installing $TMP_DIR/usr/local/include ---> $SYSROOT_PATH/usr/local/"  && cp -r $TMP_DIR/usr/local/include $SYSROOT_PATH/usr/local/
 
+   sync
    sudo umount $TMP_DIR
    rm -rf $TMP_DIR
 fi
 
+source 22-cross-compiler-build-env.sh

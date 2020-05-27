@@ -85,7 +85,7 @@ if [ ! -f $XEN_IMAGE_FILE ]; then
    mkdir -p $XEN_OVERLAY_TMP_DIR/boot
    cp $XEN_DIST_BUILD_PATH/xen/xen $XEN_OVERLAY_TMP_DIR/boot/$XEN_IMAGE_NAME
    cp 41-xen-boot-env.cmd $XEN_OVERLAY_TMP_DIR/boot/xen-boot.cmd
-   mkimage -C none -A arm -T script -d $XEN_OVERLAY_TMP_DIR/boot/xen-boot.cmd $XEN_OVERLAY_TMP_DIR/boot/boot.scr
+   mkimage -C none -A arm -T script -d $XEN_OVERLAY_TMP_DIR/boot/xen-boot.cmd $XEN_OVERLAY_TMP_DIR/boot.scr
    cd $XEN_OVERLAY_TMP_DIR/boot/
    ln -s $XEN_IMAGE_NAME xen
    cd -

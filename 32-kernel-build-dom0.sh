@@ -52,7 +52,7 @@ if [ ! -f $KERNEL_DOM0_IMAGE_FILE ]; then
    cp $KERNEL_DOM0_BIN_FILE kernel.dom0.overlay/boot/$KERNEL_DOM0_BIN_NAME
    cp $KERNEL_DOM0_DTB_FILE kernel.dom0.overlay/boot/$KERNEL_DOM0_DTB_NAME
    cp $KERNEL_DOM0_BOOT_FILE kernel.dom0.overlay/boot/boot-kernel.cmd
-   mkimage -C none -A arm -T script -d $KERNEL_DOM0_BOOT_FILE kernel.dom0.overlay/boot/boot.scr
+   mkimage -C none -A arm -T script -d $KERNEL_DOM0_BOOT_FILE kernel.dom0.overlay/boot.scr
    make modules_install -C $KERNEL_DOM0_BUILD_PATH INSTALL_MOD_PATH=kernel.dom0.overlay/lib/modules/ > kernel.dom0.overlay/lib/modules/modules_install.log
    cd kernel.dom0.overlay/boot/
    ln -s $KERNEL_DOM0_BIN_NAME kernel
