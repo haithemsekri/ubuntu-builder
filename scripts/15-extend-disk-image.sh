@@ -1,10 +1,11 @@
 #!/bin/bash
+source $(dirname $(realpath $0))/00-rootfs-env.sh
 
 DISK_IMAGE_PATH="$(realpath $1)"
 SIZE_TO_ADD=$2
 [ ! -f $DISK_IMAGE_PATH ] &&  echo "Invalid arg1 for image file" && exit 0
 [ -z $SIZE_TO_ADD ] &&  echo "Invalid arg2 for size to extend in Mega" && exit 0
-TMP_DIR="$(pwd)/extend-disk-image-size.tmp"
+TMP_DIR="$BUILD_DIR/extend-disk-image-size.tmp"
 
 dd if=/dev/zero bs=1M count=$SIZE_TO_ADD >> $DISK_IMAGE_PATH
 [ ! -d $TMP_DIR ] && mkdir -p $TMP_DIR

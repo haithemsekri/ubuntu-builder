@@ -1,26 +1,26 @@
 #!/bin/bash
 
-source 00-rootfs-setup-env.sh
-source 30-kernel-setup-env.sh
-source 40-xen-setup-env.sh
+source $(dirname $(realpath $0))/00-rootfs-env.sh
+source $(dirname $(realpath $0))/30-kernel-env.sh
+source $(dirname $(realpath $0))/40-xen-env.sh
 
 [ ! -f $XEN_IMAGE_FILE ] &&  echo "$XEN_IMAGE_FILE not found" && exit 0
-[ ! -f $TARGET_DISK_FILE ] &&  echo "$TARGET_DISK_FILE not found" && exit 0
+[ ! -f $ROOTFS_BASE_DISK ] &&  echo "$ROOTFS_BASE_DISK not found" && exit 0
 [ ! -f $KERNEL_DOM0_IMAGE_FILE ] &&  echo "$KERNEL_DOM0_IMAGE_FILE not found" && exit 0
 
-echo "Building: $TARGET_ROOTFS_DISK_FILE"
+echo "Building: $ROOTFS_TARGET_DISK"
+echo "Based on: $ROOTFS_BASE_DISK"
 
-rm -rf $TARGET_ROOTFS_DISK_FILE
-cp $TARGET_DISK_FILE $TARGET_ROOTFS_DISK_FILE
+rm -rf $ROOTFS_TARGET_DISK
+cp $ROOTFS_BASE_DISK $ROOTFS_TARGET_DISK
 sync
 
-CHROOT_SCRIPT="/tmp/chroot-script.sh"
+CHROOT_SCRIPT="$BUILD_DIR/chroot-script.sh"
 rm -rf  $CHROOT_SCRIPT
 
 cat <<EOF > $CHROOT_SCRIPT
 #!/bin/bash
 $XEN_CHROOT_SCRIPT
-
 apt-get -y remove binutils-aarch64-linux-gnu libc-dev-bin \
    zlib1g-dev linux-libc-dev libpcre3-dev libc6-dev \
    make libsqlite3-0 patch \
@@ -45,19 +45,22 @@ rm -rf /share/*
 rm -rf /usr/lib/aarch64-linux-gnu/perl-base
 EOF
 
-export ROOTFS_DISK_PATH=$TARGET_ROOTFS_DISK_FILE
-source 12-chroot-run.sh
+export ROOTFS_DISK_PATH=$ROOTFS_TARGET_DISK
+source $SCRIPTS_DIR/12-chroot-run.sh
 echo "Add Overlays: $KERNEL_DOM0_IMAGE_FILE"
-sudo tar -xzf $KERNEL_DOM0_IMAGE_FILE -C $TMP_DIR
+sudo tar -xzf $KERNEL_DOM0_IMAGE_FILE -C $RTFS_MNT_DIR
 echo "Add Overlays: $XEN_IMAGE_FILE"
-sudo tar -xzf $XEN_IMAGE_FILE -C $TMP_DIR
-sudo rsync -avlz  overlays/  ${TMP_DIR}/
+sudo tar -xzf $XEN_IMAGE_FILE -C $RTFS_MNT_DIR
+sudo rsync -avlz  $SCRIPTS_DIR/overlays/  ${RTFS_MNT_DIR}/
 chroot_run_script $CHROOT_SCRIPT
-cd $TMP_DIR
-tar czf $TARGET_BOOTFS_IMAGE boot boot.scr
+cd $RTFS_MNT_DIR
+tar -czf $BOOTFS_TARGET_IMAGE boot boot.scr
 cd
 cleanup_on_exit
 rm -rf $CHROOT_SCRIPT
 
-echo "Rootfs Image: $TARGET_ROOTFS_DISK_FILE"
-echo "Bootfs Image: $TARGET_BOOTFS_IMAGE"
+sudo e2fsck -y -f $ROOTFS_TARGET_DISK
+sudo resize2fs -M $ROOTFS_TARGET_DISK
+
+echo "Rootfs Image: $ROOTFS_TARGET_DISK"
+echo "Bootfs Image: $BOOTFS_TARGET_IMAGE"

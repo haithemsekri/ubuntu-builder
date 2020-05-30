@@ -1,9 +1,10 @@
 #!/bin/bash
 
+source $(dirname $(realpath $0))/00-rootfs-env.sh
 
 SRC_DISK_PATH=$1
 DEST_TAR_PATH=$2
-TMP_DIR="$(pwd)/disk-image-to-tar.tmp"
+TMP_DIR="$BUILD_DIR/disk-image-to-tar.tmp"
 
 [ ! -f "$SRC_DISK_PATH" ] &&  echo "Invalid arg1 for source image file" && exit 0
 [ -z $DEST_TAR_PATH ] &&  echo "Invalid arg2 for destination tar file" && exit 0

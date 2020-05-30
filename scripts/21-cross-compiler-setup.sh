@@ -1,40 +1,38 @@
 #!/bin/bash
 
-source 20-cross-compiler-setup-env.sh
-source 00-rootfs-setup-env.sh
+source $(dirname $(realpath $0))/20-cross-compiler-env.sh
+source $(dirname $(realpath $0))/00-rootfs-env.sh
 
-[ ! -f $BASE_DISK_FILE ] && echo "$BASE_DISK_FILE : file not found"  && exit 0
-[ ! -f $DL_COMPILER_FILE ] && wget $DL_COMPILER_URL -O $DL_COMPILER_FILE
-[ ! -f $DL_COMPILER_FILE ] && echo "$DL_COMPILER_FILE : not found"  && exit 0
-
+[ ! -f $ROOTFS_BASE_DISK ] && echo "$ROOTFS_BASE_DISK : file not found"  && exit 0
+[ ! -f $CCOMPILER_DL_FILE ] && wget $CCOMPILER_DL_URL -O $CCOMPILER_DL_FILE
+[ ! -f $CCOMPILER_DL_FILE ] && echo "$CCOMPILER_DL_FILE : not found"  && exit 0
 
 if [ "$1" == "--rebuild" ]; then
    echo "delete $SYSROOT_PATH"
    rm -rf "$SYSROOT_PATH"
-   echo "delete $TARGET_COMPILER_PATH"
-   rm -rf "$TARGET_COMPILER_PATH"
+   echo "delete $CCOMPILER_PATH"
+   rm -rf "$CCOMPILER_PATH"
 fi
 
-if [ ! -d $TARGET_COMPILER_PATH ]; then
-echo "Setup target-cc: $TARGET_COMPILER_PATH"
-mkdir tar.xf.tmp
-tar -xf $DL_COMPILER_FILE -C tar.xf.tmp/
+if [ ! -d $CCOMPILER_PATH ]; then
+echo "Setup target-cc: $CCOMPILER_PATH"
+TMP_DIR="$BUILD_DIR/tar.xf.tmp"
+mkdir -p $TMP_DIR
+tar -xf $CCOMPILER_DL_FILE -C $TMP_DIR/
 sync
-mv tar.xf.tmp/* $TARGET_COMPILER_PATH
-rm -rf tar.xf.tmp
+mv $TMP_DIR/* $CCOMPILER_PATH
+rm -rf $TMP_DIR
 fi
 
-[ ! -d $TARGET_COMPILER_PATH ] && echo "$TARGET_COMPILER_PATH : not found"  && exit 0
-
-
+[ ! -d $CCOMPILER_PATH ] && echo "$CCOMPILER_PATH : not found"  && exit 0
 
 if [ ! -d $SYSROOT_PATH ]; then
    echo "Setup target-sysroot: $SYSROOT_PATH"
-   TMP_DIR="cross-compiler-setup.tmp"
+   TMP_DIR="$BUILD_DIR/cross-compiler-setup.tmp"
    [ ! -d $TMP_DIR ] && mkdir -p $TMP_DIR
    sudo umount $TMP_DIR 2>/dev/null
-   sudo mount -o loop $BASE_DISK_FILE $TMP_DIR
-   MTAB_ENTRY="$(mount | egrep "$BASE_DISK_FILE" | egrep "$TMP_DIR")"
+   sudo mount -o loop $ROOTFS_BASE_DISK $TMP_DIR
+   MTAB_ENTRY="$(mount | egrep "$ROOTFS_BASE_DISK" | egrep "$TMP_DIR")"
    [ -z "$MTAB_ENTRY" ] &&  echo "Failed to mount disk" && rm -rf $TMP_DIR  && exit 0
    mkdir -p $SYSROOT_PATH
    mkdir -p $SYSROOT_PATH/usr
@@ -52,4 +50,4 @@ if [ ! -d $SYSROOT_PATH ]; then
    rm -rf $TMP_DIR
 fi
 
-source 22-cross-compiler-build-env.sh
+source $SCRIPTS_DIR/22-cross-compiler-build-env.sh

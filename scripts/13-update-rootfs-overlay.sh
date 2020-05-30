@@ -1,11 +1,13 @@
 #!/bin/bash
 
+source $(dirname $(realpath $0))/00-rootfs-env.sh
+
 [ ! -f $1 ] &&  echo "Invalid arg1 for image file" && exit 0
 [ ! -d $2 ] &&  echo "Invalid arg2 for overlay directory" && exit 0
 
 DISK_IMAGE_PATH="$(realpath $1)"
 OVERLAY_DIR=$2
-TMP_DIR="$(pwd)/update-rootfs-overlay.tmp"
+TMP_DIR="$BUILD_DIR/update-rootfs-overlay.tmp"
 
 [ ! -d $TMP_DIR ] && mkdir -p $TMP_DIR
 sudo umount $TMP_DIR 2>/dev/null

@@ -1,21 +1,23 @@
 #!/bin/bash
 
-source 20-cross-compiler-setup-env.sh
-[ ! -d $TARGET_COMPILER_PATH ] && echo "$TARGET_COMPILER_PATH : not found"  && exit 0
+[ -z $CCOMPILER_PATH ] && echo "CCOMPILER_PATH : not found"  && exit 0
+[ ! -d $CCOMPILER_PATH ] && echo "$CCOMPILER_PATH : not found"  && exit 0
+[ -z $SYSROOT_PATH ] && echo "SYSROOT_PATH : not found"  && exit 0
 [ ! -d $SYSROOT_PATH ] && echo "$SYSROOT_PATH : not found"  && exit 0
 
+if [ "$TARGET_ARCH" == "aarch64" ]; then
 export TARGET_COMPILER="aarch64-linux-gnu"
-export PATH="$PATH:$TARGET_COMPILER_PATH/bin"
+export PATH="$PATH:$CCOMPILER_PATH/bin"
 export ARCH="arm64"
 export CROSS_COMPILE="$TARGET_COMPILER-"
 export CROSS_PREFIX="$TARGET_COMPILER"
-export CC_PV="7"
+fi
 
 CHECK_PATH=${SYSROOT_PATH}/lib/${TARGET_COMPILER} [ ! -d $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
 CHECK_PATH=${SYSROOT_PATH}/usr/include/c++/${CC_PV} [ ! -d $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
 CHECK_PATH=${SYSROOT_PATH}/usr/include/${TARGET_COMPILER} [ ! -d $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
 CHECK_PATH=${SYSROOT_PATH}/usr/include/c++/${CC_PV}/backward [ ! -d $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
-CHECK_PATH=${TARGET_COMPILER_PATH}/bin/${CROSS_PREFIX}-gcc [ ! -f $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
+CHECK_PATH=${CCOMPILER_PATH}/bin/${CROSS_PREFIX}-gcc [ ! -f $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
 CHECK_PATH=${SYSROOT_PATH}/usr/include/${TARGET_COMPILER}/c++/${CC_PV} [ ! -d $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
 CHECK_PATH=${SYSROOT_PATH}/usr/lib/gcc/${TARGET_COMPILER}/${CC_PV}/include [ ! -d $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
 CHECK_PATH=${SYSROOT_PATH}/usr/lib/gcc/${TARGET_COMPILER}/${CC_PV}/include-fixed [ ! -d $CHECK_PATH ] && echo "-d $CHECK_PATH : not found"  && exit 0
@@ -48,25 +50,25 @@ SYSROOT_CPPFLAGS=$SYSROOT_CFLAGS
 SYSROOT_LDFLAGS="--sysroot=${SYSROOT_PATH} -Wl,-rpath-link=${SYSROOT_PATH}/lib/${TARGET_COMPILER} -Wl,-rpath-link=${SYSROOT_PATH}/usr/lib/${TARGET_COMPILER}"
 
 CROSS_COMPILE_ENV=$(cat <<EOF
-PATH="$PATH:${TARGET_COMPILER_PATH}/bin" \
-AR="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-ar" \
-AS="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-as" \
-LD="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-ld" \
-NM="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-nm" \
-CC="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-gcc" \
-GCC="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-gcc" \
-CPP="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-cpp" \
-CXX="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-g++" \
-FC="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-gfortran" \
-F77="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-gfortran" \
-RANLIB="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-ranlib" \
-READELF="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-readelf" \
-STRIP="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-strip" \
-OBJCOPY="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-objcopy" \
-OBJDUMP="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-objdump" \
-DEFAULT_ASSEMBLER="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-as" \
-DEFAULT_LINKER="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-ld" \
-CROSS_COMPILE="${TARGET_COMPILER_PATH}/bin/${TARGET_COMPILER}-" \
+PATH="$PATH:${CCOMPILER_PATH}/bin" \
+AR="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-ar" \
+AS="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-as" \
+LD="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-ld" \
+NM="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-nm" \
+CC="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-gcc" \
+GCC="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-gcc" \
+CPP="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-cpp" \
+CXX="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-g++" \
+FC="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-gfortran" \
+F77="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-gfortran" \
+RANLIB="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-ranlib" \
+READELF="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-readelf" \
+STRIP="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-strip" \
+OBJCOPY="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-objcopy" \
+OBJDUMP="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-objdump" \
+DEFAULT_ASSEMBLER="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-as" \
+DEFAULT_LINKER="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-ld" \
+CROSS_COMPILE="${CCOMPILER_PATH}/bin/${TARGET_COMPILER}-" \
 CPPFLAGS="$SYSROOT_CPPFLAGS" \
 CFLAGS="$SYSROOT_CFLAGS" \
 CXXFLAGS="$SYSROOT_CPPFLAGS" \

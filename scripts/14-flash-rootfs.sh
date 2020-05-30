@@ -6,9 +6,6 @@
 IMAGE=$1
 DEVICE=$2
 
-e2fsck -y -f $IMAGE
-resize2fs -M $IMAGE
-
 sudo umount $DEVICE 2>/dev/null
 sudo dd if=$IMAGE of=$DEVICE status=progress
 sync

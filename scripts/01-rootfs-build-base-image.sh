@@ -1,27 +1,21 @@
 #!/bin/bash
 
-source 00-rootfs-setup-env.sh
+source $(dirname $(realpath $0))/00-rootfs-env.sh
 
-[ ! -d "cache" ] && mkdir cache
-[ ! -d "build" ] && mkdir build
 
-[ ! -d "$(pwd)/sources" ] && mkdir $(pwd)/sources
-[ ! -f $DL_ROOTFS_FILE ] && wget $DL_ROOTFS_URL -O $DL_ROOTFS_FILE
-[ ! -f $DL_ROOTFS_FILE ] && echo "$DL_ROOTFS_FILE : file not found"
+[ ! -f $ROOTFS_DL_FILE ] && wget $ROOTFS_DL_URL -O $ROOTFS_DL_FILE
+[ ! -f $ROOTFS_DL_FILE ] && echo "$ROOTFS_DL_FILE : file not found"
 
-SRC_TAR_FILE=$DL_ROOTFS_FILE
-DISK_FILE=$BASE_DISK_FILE
-DISK_TAR_FILE=$BASE_TAR_FILE
 DISK_SIZE_MB=1024
 
 create_rootfs_disk() {
-if [ -f $DISK_TAR_FILE ]; then
-   echo "Based on: $DISK_TAR_FILE"
-   ./10-tar-to-disk-image.sh $DISK_TAR_FILE $DISK_FILE $DISK_SIZE_MB
+if [ -f $ROOTFS_BASE_TAR ]; then
+   echo "Based on: $ROOTFS_BASE_TAR"
+   $SCRIPTS_DIR/10-tar-to-disk-image.sh $ROOTFS_BASE_TAR $ROOTFS_BASE_DISK $DISK_SIZE_MB
 else
-   echo "Based on: $SRC_TAR_FILE"
-   ./10-tar-to-disk-image.sh $SRC_TAR_FILE $DISK_FILE $DISK_SIZE_MB
-   CHROOT_SCRIPT="/tmp/chroot-script.sh"
+   echo "Based on: $ROOTFS_DL_FILE"
+   $SCRIPTS_DIR/10-tar-to-disk-image.sh $ROOTFS_DL_FILE $ROOTFS_BASE_DISK $DISK_SIZE_MB
+   CHROOT_SCRIPT="$BUILD_DIR/chroot-script.sh"
    rm -rf  $CHROOT_SCRIPT
 
 cat <<EOF > $CHROOT_SCRIPT
@@ -56,21 +50,28 @@ apt-get -y install --no-install-recommends symlinks
 symlinks -c /usr/lib/aarch64-linux-gnu
 EOF
 
-   export ROOTFS_DISK_PATH=$DISK_FILE
-   source 12-chroot-run.sh
+   export ROOTFS_DISK_PATH=$ROOTFS_BASE_DISK
+   source $SCRIPTS_DIR/12-chroot-run.sh
    chroot_run_script $CHROOT_SCRIPT
    rm -rf $CHROOT_SCRIPT
-   sudo rsync -avlz  overlays/  ${TMP_DIR}/
+   sudo rsync -avlz  $SCRIPTS_DIR/overlays/  ${RTFS_MNT_DIR}/
    cleanup_on_exit
 fi
 }
 
 backup_rootfs_disk() {
-   echo "Based on: $DISK_FILE"
-   ./11-disk-image-to-tar.sh $DISK_FILE $DISK_TAR_FILE
+   echo "Based on: $ROOTFS_BASE_DISK"
+   $SCRIPTS_DIR/11-disk-image-to-tar.sh $ROOTFS_BASE_DISK $ROOTFS_BASE_TAR
 }
 
-echo "Building $DISK_FILE"
-[ ! -f $DISK_FILE ] && create_rootfs_disk
-echo "Building $DISK_TAR_FILE"
-[ ! -f $DISK_TAR_FILE ] && backup_rootfs_disk
+if [ "$1" == "--clean-rebuild" ]; then
+   echo "delete $ROOTFS_BASE_DISK"
+   rm -rf "$ROOTFS_BASE_DISK"
+   echo "delete $ROOTFS_BASE_TAR"
+   rm -rf "$ROOTFS_BASE_TAR"
+fi
+
+echo "Building $ROOTFS_BASE_DISK"
+[ ! -f $ROOTFS_BASE_DISK ] && create_rootfs_disk
+echo "Building $ROOTFS_BASE_TAR"
+[ ! -f $ROOTFS_BASE_TAR ] && backup_rootfs_disk
