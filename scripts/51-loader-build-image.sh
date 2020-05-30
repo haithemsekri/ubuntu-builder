@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source $(dirname $(realpath $0))/20-cross-compiler-env.sh
 source $(dirname $(realpath $0))/50-loader-env.sh
 
 [ ! -f $UBOOT_DL_FILE ] && wget $UBOOT_DL_URL -O $UBOOT_DL_FILE

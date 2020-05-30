@@ -15,8 +15,7 @@ rm -rf $XEN_OVERLAY_TMP_DIR
 mkdir -p $XEN_OVERLAY_TMP_DIR
 
 if [ "$1" == "--rebuild" ]; then
-   echo "delete $XEN_IMAGE_FILE"
-   rm -rf "$XEN_IMAGE_FILE"
+   echo -n ""
 fi
 
 if [ "$1" == "--clean-rebuild" ]; then

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source $(dirname $(realpath $0))/20-cross-compiler-env.sh
 source $(dirname $(realpath $0))/30-kernel-env.sh
 
 [ ! -f $KERNEL_DL_FILE ] && wget $KERNEL_DL_URL -O $KERNEL_DL_FILE
