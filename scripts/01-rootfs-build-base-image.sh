@@ -64,6 +64,10 @@ backup_rootfs_disk() {
    $SCRIPTS_DIR/11-disk-image-to-tar.sh $ROOTFS_BASE_DISK $ROOTFS_BASE_TAR
 }
 
+if [ "$1" == "--rebuild" ]; then
+   echo -n ""
+fi
+
 if [ "$1" == "--clean-rebuild" ]; then
    echo "delete $ROOTFS_BASE_DISK"
    rm -rf "$ROOTFS_BASE_DISK"

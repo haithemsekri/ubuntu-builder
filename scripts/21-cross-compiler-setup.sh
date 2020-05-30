@@ -8,11 +8,17 @@ source $(dirname $(realpath $0))/00-rootfs-env.sh
 [ ! -f $CCOMPILER_DL_FILE ] && echo "$CCOMPILER_DL_FILE : not found"  && exit 0
 
 if [ "$1" == "--rebuild" ]; then
+   echo -n ""
+fi
+
+if [ "$1" == "--clean-rebuild" ]; then
    echo "delete $SYSROOT_PATH"
    rm -rf "$SYSROOT_PATH"
    echo "delete $CCOMPILER_PATH"
    rm -rf "$CCOMPILER_PATH"
 fi
+
+echo "Building target-cc: $CCOMPILER_PATH"
 
 if [ ! -d $CCOMPILER_PATH ]; then
 echo "Setup target-cc: $CCOMPILER_PATH"
@@ -51,3 +57,5 @@ if [ ! -d $SYSROOT_PATH ]; then
 fi
 
 source $SCRIPTS_DIR/22-cross-compiler-build-env.sh
+
+echo "CC-compiler: $CCOMPILER_PATH"

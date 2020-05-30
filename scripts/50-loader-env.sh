@@ -24,8 +24,8 @@ fi
 [ -z $BOOTFS_DISK ] && BOOTFS_DISK="$BUILD_DIR/boot-disk.$EXT_FS_TYPE"
 
 
-[ -z "$BOOTFS_LOAD_CMD" ]  && BOOTFS_LOAD_CMD="ext4load usb 0:1"
-[ -z "$ROOTFS_DISK_PART" ] && ROOTFS_DISK_PART="/dev/sda1"
+[ -z "$BOOTFS_LOAD_CMD" ]  && BOOTFS_LOAD_CMD="ext4load mmc 0:2"
+[ -z "$ROOTFS_DISK_PART" ] && ROOTFS_DISK_PART="/dev/mmcblk0p2"
 
 [ -z $LOADER_PART_SIZE ] && LOADER_PART_SIZE=2     ##MegaBytes
 [ -z $BOOT_PART_SIZE ]   && BOOT_PART_SIZE=64      ##MegaBytes

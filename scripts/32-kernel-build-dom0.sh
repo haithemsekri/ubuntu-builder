@@ -26,7 +26,7 @@ if [ ! -d $KERNEL_DOM0_BUILD_PATH ]; then
    mv $TMP_DIR/* $KERNEL_DOM0_BUILD_PATH
    rm -rf $TMP_DIR
 
-   patch $KERNEL_DOM0_BUILD_PATH/include/xen/interface/io/blkif.h 32-kernel-patch-blkif.patch
+   patch $KERNEL_DOM0_BUILD_PATH/include/xen/interface/io/blkif.h $SCRIPTS_DIR/files/32-kernel-patch-blkif.patch
    cp $KERNEL_DOM0_CONFIG_FILE $KERNEL_DOM0_BUILD_PATH/.config
 fi
 

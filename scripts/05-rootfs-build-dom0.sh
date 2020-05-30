@@ -8,15 +8,26 @@ source $(dirname $(realpath $0))/40-xen-env.sh
 [ ! -f $ROOTFS_BASE_DISK ] &&  echo "$ROOTFS_BASE_DISK not found" && exit 0
 [ ! -f $KERNEL_DOM0_IMAGE_FILE ] &&  echo "$KERNEL_DOM0_IMAGE_FILE not found" && exit 0
 
+if [ "$1" == "--rebuild" ]; then
+   echo "delete $ROOTFS_TARGET_DISK"
+   rm -rf $ROOTFS_TARGET_DISK
+fi
+
+if [ "$1" == "--clean-rebuild" ]; then
+   echo "delete $ROOTFS_TARGET_DISK"
+   rm -rf $ROOTFS_TARGET_DISK
+fi
+
 echo "Building: $ROOTFS_TARGET_DISK"
-echo "Based on: $ROOTFS_BASE_DISK"
+if [ ! -f $ROOTFS_TARGET_DISK ]; then
+   echo "Based on: $ROOTFS_BASE_DISK"
 
-rm -rf $ROOTFS_TARGET_DISK
-cp $ROOTFS_BASE_DISK $ROOTFS_TARGET_DISK
-sync
+   rm -rf $ROOTFS_TARGET_DISK
+   cp $ROOTFS_BASE_DISK $ROOTFS_TARGET_DISK
+   sync
 
-CHROOT_SCRIPT="$BUILD_DIR/chroot-script.sh"
-rm -rf  $CHROOT_SCRIPT
+   CHROOT_SCRIPT="$BUILD_DIR/chroot-script.sh"
+   rm -rf  $CHROOT_SCRIPT
 
 cat <<EOF > $CHROOT_SCRIPT
 #!/bin/bash
@@ -45,22 +56,23 @@ rm -rf /share/*
 rm -rf /usr/lib/aarch64-linux-gnu/perl-base
 EOF
 
-export ROOTFS_DISK_PATH=$ROOTFS_TARGET_DISK
-source $SCRIPTS_DIR/12-chroot-run.sh
-echo "Add Overlays: $KERNEL_DOM0_IMAGE_FILE"
-sudo tar -xzf $KERNEL_DOM0_IMAGE_FILE -C $RTFS_MNT_DIR
-echo "Add Overlays: $XEN_IMAGE_FILE"
-sudo tar -xzf $XEN_IMAGE_FILE -C $RTFS_MNT_DIR
-sudo rsync -avlz  $SCRIPTS_DIR/overlays/  ${RTFS_MNT_DIR}/
-chroot_run_script $CHROOT_SCRIPT
-cd $RTFS_MNT_DIR
-tar -czf $BOOTFS_TARGET_IMAGE boot boot.scr
-cd
-cleanup_on_exit
-rm -rf $CHROOT_SCRIPT
+   export ROOTFS_DISK_PATH=$ROOTFS_TARGET_DISK
+   source $SCRIPTS_DIR/12-chroot-run.sh
+   echo "Add Overlays: $KERNEL_DOM0_IMAGE_FILE"
+   sudo tar -xzf $KERNEL_DOM0_IMAGE_FILE -C $RTFS_MNT_DIR
+   echo "Add Overlays: $XEN_IMAGE_FILE"
+   sudo tar -xzf $XEN_IMAGE_FILE -C $RTFS_MNT_DIR
+   sudo rsync -avlz  $SCRIPTS_DIR/overlays/  ${RTFS_MNT_DIR}/
+   chroot_run_script $CHROOT_SCRIPT
+   cd $RTFS_MNT_DIR
+   tar -czf $BOOTFS_TARGET_IMAGE boot boot.scr
+   cd
+   cleanup_on_exit
+   rm -rf $CHROOT_SCRIPT
 
-sudo e2fsck -y -f $ROOTFS_TARGET_DISK
-sudo resize2fs -M $ROOTFS_TARGET_DISK
+   sudo e2fsck -y -f $ROOTFS_TARGET_DISK
+   sudo resize2fs -M $ROOTFS_TARGET_DISK
+fi
 
 echo "Rootfs Image: $ROOTFS_TARGET_DISK"
 echo "Bootfs Image: $BOOTFS_TARGET_IMAGE"

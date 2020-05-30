@@ -84,7 +84,7 @@ if [ ! -f $XEN_IMAGE_FILE ]; then
    [ ! -f $XEN_DIST_BUILD_PATH/xen/xen ] && echo "$XEN_DIST_BUILD_PATH/xen/xen : not found"  && exit 0
    mkdir -p $XEN_OVERLAY_TMP_DIR/boot
    cp $XEN_DIST_BUILD_PATH/xen/xen $XEN_OVERLAY_TMP_DIR/boot/$XEN_IMAGE_NAME
-   cp $SCRIPTS_DIR/41-xen-boot-env.cmd $XEN_OVERLAY_TMP_DIR/boot/xen-boot.cmd
+   cp $SCRIPTS_DIR/files/41-xen-boot-env.cmd $XEN_OVERLAY_TMP_DIR/boot/xen-boot.cmd
    mkimage -C none -A arm -T script -d $XEN_OVERLAY_TMP_DIR/boot/xen-boot.cmd $XEN_OVERLAY_TMP_DIR/boot/boot.scr
    cd $XEN_OVERLAY_TMP_DIR; ln -s boot/boot.scr; cd -
    cd $XEN_OVERLAY_TMP_DIR/boot/
