@@ -1,0 +1,3 @@
+[submodule "arm-rootfs-builder"]
+	path = arm-rootfs-builder
+	url = https://github.com/haithemsekri/arm-rootfs-builder.git

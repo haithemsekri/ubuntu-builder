@@ -2,11 +2,7 @@
 
 source $(dirname $(realpath $0))/00-common-env.sh
 
-[ -z $XEN_DL_FILE ] && XEN_DL_FILE="$DL_DIR/xen-4.11.4.tar.gz"
-[ -z $XEN_DL_URL ]  && XEN_DL_URL="https://downloads.xenproject.org/release/xen/4.11.4/xen-4.11.4.tar.gz"
-[ -z $XEN_IMAGE_NAME ]  && XEN_IMAGE_NAME="xen-4.11.4-$TARGET_BUILD_NAME"
-[ -z $XEN_IMAGE_FILE ]  && XEN_IMAGE_FILE="$BUILD_DIR/$XEN_IMAGE_NAME.tar.gz"
-[ -z $XEN_TAR_DIR_NAME ]  && XEN_TAR_DIR_NAME="xen-4.11.4"
+[ -z $XEN_IMAGE_FILE ]  && XEN_IMAGE_FILE="$BUILD_DIR/xen-distro.tar.gz"
 
 XEN_CHROOT_SCRIPT=$(cat <<EOF
 #/lib/systemd/systemd-sysv-install enable xendomains

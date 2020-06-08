@@ -38,3 +38,6 @@ cache
 build*
 dl*
 imag*
+arm-rootfs-builder
+centos-*
+ubuntu-*
