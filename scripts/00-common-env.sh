@@ -7,8 +7,6 @@
 [ -z "$TARGET_NAME" ]           && TARGET_NAME="opipc2"
 [ -z "$EXT_FS_TYPE" ]           && EXT_FS_TYPE="ext3"
 [ -z "$ROOTFS_TARGET_SIZE_MB" ] && ROOTFS_TARGET_SIZE_MB="1024"
-[ -z "$BOOTFS_LOAD_CMD" ]       && BOOTFS_LOAD_CMD="ext4load usb 0:1" ## Kernel+dtb+xen are located on USB-part1
-[ -z "$ROOTFS_DISK_PART" ]      && ROOTFS_DISK_PART="/dev/sda1" ## Userland rootfs device
 
 #Wrokspace :##########################################
 [ -z $TARGET_BUILD_NAME ]     && TARGET_BUILD_NAME="$DISTRO_NAME-$TARGET_ARCH-$TARGET_NAME"
@@ -52,4 +50,13 @@ if [ "$TARGET_NAME" == "opipc2" ]; then
    [ -z $KERNEL_DOMU_CONFIG ]        && KERNEL_DOMU_CONFIG="$SCRIPTS_DIR/files/kernel-config-dom0-opipc2.config"
    [ -z $KERNEL_DOMU_PATCH ]         && KERNEL_DOMU_PATCH="$SCRIPTS_DIR/files/kernel-patch-blkif.patch"
    [ -z $KERNEL_DOMU_DISTRO ]        && KERNEL_DOMU_DISTRO="$BUILD_DIR/$KERNEL_DOMU_DISTRO_NAME.tar.xz"
+
+   [ -z $BOOT_KERNEL_ADDR ]         &&  BOOT_KERNEL_ADDR="0x50000000"
+   [ -z $BOOT_XEN_ADDR ]            &&  BOOT_XEN_ADDR="0x46000000"
+   [ -z $BOOT_DTB_ADDR ]            &&  BOOT_DTB_ADDR="0x45000000"
+   [ -z $BOOT_SRC_ADDR ]            &&  BOOT_SRC_ADDR="0x44000000"
+   [ -z $BOOT_DISTRO_TAR ]          &&  BOOT_DISTRO_TAR="$BUILD_DIR/loader-arm64-opic2.tar.xz"
+
+   [ -z "$BOOTFS_LOAD_CMD" ]        && BOOTFS_LOAD_CMD="ext4load usb 0:1" ## Kernel+dtb+xen are located on USB-part1
+   [ -z "$ROOTFS_DISK_PART" ]       && ROOTFS_DISK_PART="/dev/sda1" ## Userland rootfs device
 fi

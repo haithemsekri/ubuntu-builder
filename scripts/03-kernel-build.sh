@@ -41,13 +41,12 @@ if [ "$1" == "--kernel-dom0-build" ]; then
    make modules_install -C $BUILD_TMP_DIR INSTALL_MOD_PATH=$TMP_INSTALL_DIR/lib/modules > $TMP_INSTALL_DIR/lib/modules/modules_install.log
    cp $BUILD_TMP_DIR/$KERNEL_DOM0_IMG $TMP_INSTALL_DIR/boot/$KERNEL_DOM0_DISTRO_NAME.bin
    cp $BUILD_TMP_DIR/$KERNEL_DOM0_DTB $TMP_INSTALL_DIR/boot/$KERNEL_DOM0_DISTRO_NAME.dtb
-   cp $SCRIPTS_DIR/files/kernel-boot-env.cmd $TMP_INSTALL_DIR/boot/$KERNEL_DOM0_DISTRO_NAME-boot.cmd
-
+   cp $SCRIPTS_DIR/files/kernel-boot-env.cmd $TMP_INSTALL_DIR/boot/kernel-boot.cmd
    cd $TMP_INSTALL_DIR/boot/
-   mkimage -C none -A arm -T script -d $KERNEL_DOM0_DISTRO_NAME-boot.cmd boot.scr
+   mkimage -C none -A arm -T script -d kernel-boot.cmd kernel-boot.scr
+   ln -sf kernel-boot.scr boot.scr
    ln -sf $KERNEL_DOM0_DISTRO_NAME.bin kernel
    ln -sf $KERNEL_DOM0_DISTRO_NAME.dtb dtb
-   ln -sf $KERNEL_DOM0_DISTRO_NAME-boot.cmd boot.cmd
    cd $TMP_INSTALL_DIR
    tar -I 'pxz -T 0 -9' -cf $KERNEL_DOM0_DISTRO .
    cd $WORKSPACE

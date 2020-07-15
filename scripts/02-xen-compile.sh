@@ -14,47 +14,53 @@ source $(dirname $(realpath $0))/00-common-env.sh
 [ ! -f $XEN_DL_FILE ] && wget $XEN_DL_URL -O $XEN_DL_FILE
 [ ! -f $XEN_DL_FILE ] &&  echo "$XEN_DL_FILE not found" && exit 0
 
-if [ "$1" == "--xen-build-distro" ]; then
-   [ "$TARGET_NAME" == "opipc2" ] && XEN_EARLY_PRINTK="sun7i"
-   [ -z "$XEN_EARLY_PRINTK" ] &&  echo "XEN_EARLY_PRINTK: not defined" && exit 0
-
+if [ "$1" == "--xen-distro-build" ]; then
    echo "delete $XEN_DISTRO_IMAGE_FILE"
    rm -rf $XEN_DISTRO_IMAGE_FILE
+   TMP_BUILD_DIR="$BUILD_DIR/xen-distro-build"
+   if [ ! -d $TMP_BUILD_DIR ]; then
+      echo "Setup: $TMP_BUILD_DIR"
+      mkdir -p $TMP_BUILD_DIR
+      tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
+   fi
 
-   TMP_BUILD_DIR="$BUILD_DIR/build-tmp"
-   rm -rf $TMP_BUILD_DIR
-   mkdir -p $TMP_BUILD_DIR
-   tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
+   [ "$TARGET_NAME" == "opipc2" ] && XEN_EARLY_PRINTK="sun7i"
+   [ -z "$XEN_EARLY_PRINTK" ] &&  echo "XEN_EARLY_PRINTK: not defined" && exit 0
    cd $TMP_BUILD_DIR
    /usr/bin/make -j dist-xen XEN_TARGET_ARCH="$L_CROSS_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" CONFIG_DEBUG=y debug=y CONFIG_EARLY_PRINTK="$XEN_EARLY_PRINTK"
    [ ! -f $TMP_BUILD_DIR/xen/xen ] && echo "$TMP_BUILD_DIR/xen/xen : file not found"  && exit 1
-
    TMP_TAR_DIR="$BUILD_DIR/tar-tmp"
    rm -rf $TMP_TAR_DIR
    mkdir -p $TMP_TAR_DIR/boot
    cp $TMP_BUILD_DIR/xen/xen $TMP_TAR_DIR/boot/xen
+   cp $SCRIPTS_DIR/files/xen-boot-env.cmd $TMP_TAR_DIR/boot/xen-boot.cmd
+   cd $TMP_TAR_DIR/boot/
+   mkimage -C none -A arm -T script -d xen-boot.cmd xen-boot.scr
+   ln -sf xen-boot.scr boot.scr
    cd $TMP_TAR_DIR
    tar -I 'pxz -T 0 -9' -cf $XEN_DISTRO_IMAGE_FILE .
    chmod 666 $XEN_DISTRO_IMAGE_FILE
    cd $WORKSPACE
-   rm -rf $TMP_BUILD_DIR
    rm -rf $TMP_TAR_DIR
    echo "Xen Distro Image: $XEN_DISTRO_IMAGE_FILE"
 fi
 
-if [ "$1" == "--xen-build-tools" ]; then
+if [ "$1" == "--xen-tools-build" ]; then
+   echo "delete $XEN_TOOLS_IMAGE_FILE"
+   rm -rf $XEN_TOOLS_IMAGE_FILE
+   TMP_BUILD_DIR="$BUILD_DIR/xen-tools-build"
+   if [ ! -d $TMP_BUILD_DIR ]; then
+      echo "Setup: $TMP_BUILD_DIR"
+      mkdir -p $TMP_BUILD_DIR
+      tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
+      patch --verbose $TMP_BUILD_DIR/xen/include/public/arch-arm.h $SCRIPTS_DIR/files/libgcc-4-xen-arm.patch
+   fi
+
    if [ "$USE_SYSTEMD" == "YES" ]; then
       export L_CONF_EXTRA_FLAGS="--enable-systemd"
    else
       export L_CONF_EXTRA_FLAGS="--disable-systemd"
    fi
-   echo "delete $XEN_TOOLS_IMAGE_FILE"
-   rm -rf $XEN_TOOLS_IMAGE_FILE
-   TMP_BUILD_DIR="$BUILD_DIR/xen-build-tmp"
-   rm -rf $TMP_BUILD_DIR
-   mkdir -p $TMP_BUILD_DIR
-   tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
-   patch --verbose $TMP_BUILD_DIR/xen/include/public/arch-arm.h $SCRIPTS_DIR/files/libgcc-4-xen-arm.patch
 
    export L_SYSROOT="$BUILD_DIR/cc-rootfs-tmp"
    mkdir -p $L_SYSROOT
@@ -70,16 +76,16 @@ if [ "$1" == "--xen-build-tools" ]; then
       if_mounted_umount ${L_SYSROOT}
       rm -rf ${L_SYSROOT}
    }
+
    trap cleanup_on_exit EXIT
    mount -o loop $ROOTFS_TARGET_DISK $L_SYSROOT
+   sync
    MTAB_ENTRY="$(mount | egrep "$ROOTFS_TARGET_DISK" | egrep "$L_SYSROOT")"
    [ -z "$MTAB_ENTRY" ] &&  echo "Failed to mount disk" &&  exit 1
    [ ! -f "$L_SYSROOT/cross-build-env.sh" ] &&  echo "L_SYSROOT/cross-build-env.sh : file not found" && exit 1
    source "$L_SYSROOT/cross-build-env.sh"
 
    TMP_TAR_DIR="$BUILD_DIR/xen-install-tmp"
-   rm -rf $TMP_TAR_DIR
-   mkdir -p $TMP_TAR_DIR
 
 cat <<EOF > $BUILD_DIR/xen-tools-compile.sh
 #!/bin/bash
@@ -125,6 +131,8 @@ RC="${L_RC}" \
 AS="${L_AS}"
 [ ! -f tools/qemu-xen-build/i386-softmmu/qemu-system-i386 ] && echo "tools/qemu-xen-build/i386-softmmu/qemu-system-i386 : not found"  && exit 1
 
+rm -rf $TMP_TAR_DIR
+mkdir -p $TMP_TAR_DIR
 PKG_CONFIG="${L_PKG_CONFIG}" \
 PKG_CONFIG_LIBDIR="${L_PKG_CONFIG_LIBDIR}" \
 PKG_CONFIG_SYSROOT_DIR="${L_PKG_CONFIG_SYSROOT_DIR}" \
@@ -155,9 +163,7 @@ EOF
    tar -I 'pxz -T 0 -9' -cf $XEN_TOOLS_IMAGE_FILE .
    chmod 666 $XEN_TOOLS_IMAGE_FILE
    cd $WORKSPACE
-
    rm -rf $TMP_TAR_DIR
-   rm -rf $TMP_BUILD_DIR
    rm -rf $BUILD_DIR/xen-tools-compile.sh
    echo "Xen Tools Image: $XEN_TOOLS_IMAGE_FILE"
 fi
