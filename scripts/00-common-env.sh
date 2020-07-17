@@ -16,8 +16,13 @@
 [ -z $BUILD_DIR ]       && BUILD_DIR="$WORKSPACE/$TARGET_BUILD_NAME"
 [ -z $MKFS_CMD ]        && MKFS_CMD="mkfs.$EXT_FS_TYPE"
 
-[ -z $ROOTFS_TARGET_DISK ] && ROOTFS_TARGET_DISK="$BUILD_DIR/$TARGET_BUILD_NAME.$EXT_FS_TYPE"
-[ -z $ROOTFS_TARGET_TAR ]  && ROOTFS_TARGET_TAR="$BUILD_DIR/$TARGET_BUILD_NAME.tar.xz"
+[ -z $ROOTFS_BASE_DISK ]   && ROOTFS_BASE_DISK="$BUILD_DIR/$TARGET_BUILD_NAME-base.$EXT_FS_TYPE"
+[ -z $ROOTFS_BASE_TAR ]    && ROOTFS_BASE_TAR="$BUILD_DIR/$TARGET_BUILD_NAME-base.tar.xz"
+[ -z $ROOTFS_TARGET_DISK ] && ROOTFS_TARGET_DISK="$BUILD_DIR/$TARGET_BUILD_NAME-target.$EXT_FS_TYPE"
+[ -z $ROOTFS_TARGET_TAR ]  && ROOTFS_TARGET_TAR="$BUILD_DIR/$TARGET_BUILD_NAME-target.tar.xz"
+[ -z $BOOTFS_DISK ]        && BOOTFS_DISK="$BUILD_DIR/bootfs.$EXT_FS_TYPE"
+[ -z $LOADER_DISK ]        && LOADER_DISK="$BUILD_DIR/loader.raw"
+[ -z $SD_DISK_IMG ]        && SD_DISK_IMG="$BUILD_DIR/$TARGET_BUILD_NAME.img"
 [ -z $TOOLCHAIN_PATH ]     && TOOLCHAIN_PATH="$BUILD_DIR/linux-gnu-gcc"
 [ ! -d $DL_DIR ]           && mkdir $DL_DIR
 [ ! -d $BUILD_DIR ]        && mkdir $BUILD_DIR
@@ -50,13 +55,10 @@ if [ "$TARGET_NAME" == "opipc2" ]; then
    [ -z $KERNEL_DOMU_CONFIG ]        && KERNEL_DOMU_CONFIG="$SCRIPTS_DIR/files/kernel-config-dom0-opipc2.config"
    [ -z $KERNEL_DOMU_PATCH ]         && KERNEL_DOMU_PATCH="$SCRIPTS_DIR/files/kernel-patch-blkif.patch"
    [ -z $KERNEL_DOMU_DISTRO ]        && KERNEL_DOMU_DISTRO="$BUILD_DIR/$KERNEL_DOMU_DISTRO_NAME.tar.xz"
+   [ -z $BOOT_DISTRO_TAR ]           &&  BOOT_DISTRO_TAR="$BUILD_DIR/loader-arm64-opic2.tar.xz"
 
-   [ -z $BOOT_KERNEL_ADDR ]         &&  BOOT_KERNEL_ADDR="0x50000000"
-   [ -z $BOOT_XEN_ADDR ]            &&  BOOT_XEN_ADDR="0x46000000"
-   [ -z $BOOT_DTB_ADDR ]            &&  BOOT_DTB_ADDR="0x45000000"
-   [ -z $BOOT_SRC_ADDR ]            &&  BOOT_SRC_ADDR="0x44000000"
-   [ -z $BOOT_DISTRO_TAR ]          &&  BOOT_DISTRO_TAR="$BUILD_DIR/loader-arm64-opic2.tar.xz"
-
-   [ -z "$BOOTFS_LOAD_CMD" ]        && BOOTFS_LOAD_CMD="ext4load usb 0:1" ## Kernel+dtb+xen are located on USB-part1
-   [ -z "$ROOTFS_DISK_PART" ]       && ROOTFS_DISK_PART="/dev/sda1" ## Userland rootfs device
+   [ -z $BOOT_KERNEL_SCRIPT ]    &&  BOOT_KERNEL_SCRIPT="$SCRIPTS_DIR/files/opipc2-kernel-boot-env.cmd"
+   [ -z $BOOT_XEN_SCRIPT ]       &&  BOOT_XEN_SCRIPT="$SCRIPTS_DIR/files/opipc2-xen-boot-env.cmd"
+   [ -z $BOOT_RTFS_SCRIPT ]      &&  BOOT_RTFS_SCRIPT="$SCRIPTS_DIR/files/opipc2-boot-env.cmd"
 fi
+

@@ -1,5 +1,5 @@
 #!/bin/bash
-## apt-get --no-install-recommends install python python-dev python3-dev lib32ncurses5 lib32z1 swig
+## apt-get --no-install-recommends install python python-dev python3-dev lib32z1 swig device-tree-compiler
 
 source $(dirname $(realpath $0))/00-common-env.sh
 
@@ -48,28 +48,9 @@ if [ "$1" == "--loader-build" ]; then
    make -j8 $UBOOT_MAKE_ARGS CFLAGS="$UBOOT_CFLAGS" -C $UBOOT_BUILD_DIR
    CK_PATH=$UBOOT_BUILD_DIR/$UBOOT_ATF_BIN [ ! -f $CK_PATH ] && echo "$CK_PATH : not found"  && exit 0
 
-cat <<EOF > $UBOOT_BUILD_DIR/boot.cmd
-
-#!/bin/bash
-
-# mkimage -C none -A arm -T script -d boot.cmd boot.scr
-setenv load_cmd      "$BOOTFS_LOAD_CMD"
-setenv rootfs_path   "$ROOTFS_DISK_PART"
-setenv kernel_addr_r "$BOOT_KERNEL_ADDR"
-setenv src_addr_r    "$BOOT_SRC_ADDR"
-setenv xen_addr_r    "$BOOT_XEN_ADDR"
-setenv dtb_addr_r    "$BOOT_DTB_ADDR"
-setenv src_path      "boot/boot.scr"
-
-\$load_cmd \$src_addr_r \$src_path
-source \$src_addr_r
-
-EOF
-
    cd $UBOOT_BUILD_DIR
-   sudo mkimage -C none -A arm -T script -d boot.cmd boot.scr
    ln -sf $UBOOT_ATF_BIN uboot-spl
-   tar -I 'pxz -T 0 -9' -cf $BOOT_DISTRO_TAR bl31.bin u-boot.itb uboot-spl $UBOOT_ATF_BIN boot.cmd boot.scr
+   tar -I 'pxz -T 0 -9' -cf $BOOT_DISTRO_TAR bl31.bin u-boot.itb uboot-spl $UBOOT_ATF_BIN
    cd $WORKSPACE
    echo "Boot Image: $BOOT_DISTRO_TAR"
 fi

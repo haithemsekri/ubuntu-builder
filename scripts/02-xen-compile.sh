@@ -6,8 +6,8 @@ source $(dirname $(realpath $0))/00-common-env.sh
 [ -z $DISTRO_NAME ]            && echo "DISTRO_NAME not defined" && exit 0
 [ -z $TARGET_ARCH ]            && echo "TARGET_ARCH not defined" && exit 0
 [ -z $SCRIPTS_DIR ]            && echo "SCRIPTS_DIR not defined" && exit 0
-[ -z $ROOTFS_TARGET_DISK ]     && echo "ROOTFS_TARGET_DISK not defined" && exit 0
-[ ! -f $ROOTFS_TARGET_DISK ]   &&  echo "$ROOTFS_TARGET_DISK not found" && exit 0
+[ -z $ROOTFS_BASE_DISK ]     && echo "ROOTFS_BASE_DISK not defined" && exit 0
+[ ! -f $ROOTFS_BASE_DISK ]   &&  echo "$ROOTFS_BASE_DISK not found" && exit 0
 
 [ -z $XEN_DL_URL ]    && XEN_DL_URL="https://iweb.dl.sourceforge.net/project/arm-rootfs-ressources/xen-4.11.4.tar.xz"
 [ -z $XEN_DL_FILE ]   && XEN_DL_FILE="$DL_DIR/$(basename $XEN_DL_URL)"
@@ -27,16 +27,12 @@ if [ "$1" == "--xen-distro-build" ]; then
    [ "$TARGET_NAME" == "opipc2" ] && XEN_EARLY_PRINTK="sun7i"
    [ -z "$XEN_EARLY_PRINTK" ] &&  echo "XEN_EARLY_PRINTK: not defined" && exit 0
    cd $TMP_BUILD_DIR
-   /usr/bin/make -j dist-xen XEN_TARGET_ARCH="$L_CROSS_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" CONFIG_DEBUG=y debug=y CONFIG_EARLY_PRINTK="$XEN_EARLY_PRINTK"
+   /usr/bin/make -j4 dist-xen XEN_TARGET_ARCH="$L_CROSS_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" CONFIG_DEBUG=y debug=y CONFIG_EARLY_PRINTK="$XEN_EARLY_PRINTK"
    [ ! -f $TMP_BUILD_DIR/xen/xen ] && echo "$TMP_BUILD_DIR/xen/xen : file not found"  && exit 1
    TMP_TAR_DIR="$BUILD_DIR/tar-tmp"
    rm -rf $TMP_TAR_DIR
    mkdir -p $TMP_TAR_DIR/boot
    cp $TMP_BUILD_DIR/xen/xen $TMP_TAR_DIR/boot/xen
-   cp $SCRIPTS_DIR/files/xen-boot-env.cmd $TMP_TAR_DIR/boot/xen-boot.cmd
-   cd $TMP_TAR_DIR/boot/
-   mkimage -C none -A arm -T script -d xen-boot.cmd xen-boot.scr
-   ln -sf xen-boot.scr boot.scr
    cd $TMP_TAR_DIR
    tar -I 'pxz -T 0 -9' -cf $XEN_DISTRO_IMAGE_FILE .
    chmod 666 $XEN_DISTRO_IMAGE_FILE
@@ -78,9 +74,9 @@ if [ "$1" == "--xen-tools-build" ]; then
    }
 
    trap cleanup_on_exit EXIT
-   mount -o loop $ROOTFS_TARGET_DISK $L_SYSROOT
+   mount -o loop $ROOTFS_BASE_DISK $L_SYSROOT
    sync
-   MTAB_ENTRY="$(mount | egrep "$ROOTFS_TARGET_DISK" | egrep "$L_SYSROOT")"
+   MTAB_ENTRY="$(mount | egrep "$ROOTFS_BASE_DISK" | egrep "$L_SYSROOT")"
    [ -z "$MTAB_ENTRY" ] &&  echo "Failed to mount disk" &&  exit 1
    [ ! -f "$L_SYSROOT/cross-build-env.sh" ] &&  echo "L_SYSROOT/cross-build-env.sh : file not found" && exit 1
    source "$L_SYSROOT/cross-build-env.sh"
@@ -121,7 +117,7 @@ XEN_TARGET_ARCH="$L_CROSS_ARCH" \
 LDFLAGS="${L_LDFLAGS}" \
 PYTHON="/usr/bin/python2" \
 LD_LIBRARY_PATH="${L_SYSROOT}/lib" \
-/usr/bin/make dist-tools -j \
+/usr/bin/make dist-tools -j4 \
 CC="${L_CC} ${L_CFLAGS}" \
 CXX="${L_CXX} ${L_CXXFLAGS}" \
 LD="${L_LD} ${L_LDFLAGS}" \
@@ -140,7 +136,7 @@ XEN_TARGET_ARCH="${L_CROSS_ARCH}" \
 LDFLAGS="${L_LDFLAGS}" \
 PYTHON="/usr/bin/python2" \
 LD_LIBRARY_PATH="${L_SYSROOT}/lib" \
-/usr/bin/make install-tools DESTDIR="$TMP_TAR_DIR" \
+/usr/bin/make -j4 install-tools DESTDIR="$TMP_TAR_DIR" \
 CC="${L_CC} ${L_CFLAGS}" \
 CXX="${L_CXX} ${L_CXXFLAGS}" \
 LD="${L_LD} ${L_LDFLAGS}" \
@@ -159,6 +155,41 @@ EOF
 
    [ ! -f $TMP_TAR_DIR/usr/local/lib/xen/bin/qemu-system-i386 ] && echo "$TMP_TAR_DIR/usr/local/lib/xen/bin/qemu-system-i386 : not found"  && exit 0
 
+if [ "$USE_SYSTEMD" == "YES" ]; then
+cat <<EOF > $TMP_TAR_DIR/post-install-chroot.sh
+#!/bin/bash
+/lib/systemd/systemd-sysv-install enable xendomains
+/lib/systemd/systemd-sysv-install enable xendriverdomain
+/lib/systemd/systemd-sysv-install enable xen-watchdog
+/lib/systemd/systemd-sysv-install enable xendomains
+systemctl enable xenconsoled.service
+systemctl enable xendriverdomain.service
+systemctl enable xen-watchdog.service
+systemctl enable xendomains.service
+systemctl enable xen-qemu-dom0-disk-backend.service
+systemctl enable xen-init-dom0.service
+systemctl enable xenstored.service
+rm /usr/local/lib/modules-load.d/xen.conf
+ldconfig /usr/local/lib/
+echo "/usr/local/lib/" > /etc/ld.so.conf.d/usr-local-lib.conf
+ldconfig
+
+EOF
+else
+cat <<EOF > $TMP_TAR_DIR/post-install-chroot.sh
+#!/bin/bash
+update-rc.d xencommons defaults 19 18
+update-rc.d xendomains defaults 21 20
+update-rc.d xen-watchdog defaults 22 23
+update-rc.d xen-watchdog defaults 25 24
+rm /usr/local/lib/modules-load.d/xen.conf
+ldconfig /usr/local/lib/
+echo "/usr/local/lib/" > /etc/ld.so.conf.d/usr-local-lib.conf
+ldconfig
+
+EOF
+fi
+
    cd $TMP_TAR_DIR
    tar -I 'pxz -T 0 -9' -cf $XEN_TOOLS_IMAGE_FILE .
    chmod 666 $XEN_TOOLS_IMAGE_FILE
@@ -167,3 +198,5 @@ EOF
    rm -rf $BUILD_DIR/xen-tools-compile.sh
    echo "Xen Tools Image: $XEN_TOOLS_IMAGE_FILE"
 fi
+
+#tar --skip-old-file -xf   /home/hs/Devel/github/xen-arm-builder/centos-7-arm64-opipc2/xen-arm64.tar.xz -C /mnt/sdb1/

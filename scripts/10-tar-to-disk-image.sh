@@ -12,9 +12,8 @@ TMP_DIR="$BUILD_DIR/tar-to-disk-image.tmp"
 [ -z $DEST_DISK_SIZE ] &&  echo "Invalid arg3 for destination file size in Mega" && exit 1
 [ ! -d $TMP_DIR ] && mkdir -p $TMP_DIR
 
-dd if=/dev/zero of=$DEST_DISK_FILE bs=1M count=$DEST_DISK_SIZE
-sync
-$MKFS_CMD $DEST_DISK_FILE
+fallocate -l $((1024*1024*$DEST_DISK_SIZE)) $DEST_DISK_FILE  1> /dev/null
+$MKFS_CMD $DEST_DISK_FILE  &> /dev/null
 
 umount $TMP_DIR 2>/dev/null
 mount -o loop $DEST_DISK_FILE $TMP_DIR
@@ -23,5 +22,5 @@ MTAB_ENTRY="$(mount | egrep "$DEST_DISK_FILE" | egrep "$TMP_DIR")"
 tar -xf $SRC_TAR_FILE -C $TMP_DIR
 sync
 umount $TMP_DIR
-e2fsck -f -y $DEST_DISK_FILE
+e2fsck -f -y $DEST_DISK_FILE  &> /dev/null
 rm -rf $TMP_DIR

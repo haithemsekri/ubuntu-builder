@@ -20,16 +20,16 @@ fi
 [ ! -f $TOOLCHAIN_DL_TAR ]    && wget $TOOLCHAIN_DL_URL -O $TOOLCHAIN_DL_TAR
 [ ! -f $TOOLCHAIN_DL_TAR ]    && echo "$TOOLCHAIN_DL_TAR : file not found"
 
-[ -z $ROOTFS_BASE_TAR_URL ]   && ROOTFS_BASE_TAR_URL="https://iweb.dl.sourceforge.net/project/arm-rootfs-ressources/$DISTRO_NAME-$TARGET_ARCH-base.tar.xz"
-[ -z $ROOTFS_BASE_TAR ]       && ROOTFS_BASE_TAR="$DL_DIR/$(basename $ROOTFS_BASE_TAR_URL)"
-[ ! -f $ROOTFS_BASE_TAR ]     && wget $ROOTFS_BASE_TAR_URL -O $ROOTFS_BASE_TAR
-[ ! -f $ROOTFS_BASE_TAR ]     && echo "$ROOTFS_BASE_TAR : file not found"
-
+[ -z $ROOTFS_DL_TAR_URL ]   && ROOTFS_DL_TAR_URL="https://iweb.dl.sourceforge.net/project/arm-rootfs-ressources/$DISTRO_NAME-$TARGET_ARCH-base.tar.xz"
+[ -z $ROOTFS_DL_TAR ]       && ROOTFS_DL_TAR="$DL_DIR/$(basename $ROOTFS_DL_TAR_URL)"
+[ ! -f $ROOTFS_DL_TAR ]     && wget $ROOTFS_DL_TAR_URL -O $ROOTFS_DL_TAR
+[ ! -f $ROOTFS_DL_TAR ]     && echo "$ROOTFS_DL_TAR : file not found"
 
 if [ "$1" == "--rootfs-base-build" ]; then
-   echo "Setup $ROOTFS_TARGET_DISK"
-   rm -rf $ROOTFS_TARGET_DISK
-   $SCRIPTS_DIR/10-tar-to-disk-image.sh $ROOTFS_BASE_TAR $ROOTFS_TARGET_DISK $ROOTFS_TARGET_SIZE_MB
+   echo "Setup $ROOTFS_BASE_DISK"
+   rm -rf $ROOTFS_BASE_DISK
+   $SCRIPTS_DIR/10-tar-to-disk-image.sh $ROOTFS_DL_TAR $ROOTFS_BASE_DISK $ROOTFS_TARGET_SIZE_MB
+   cp $ROOTFS_DL_TAR $ROOTFS_BASE_TAR
 fi
 
 if [ "$1" == "--toolchain-build" ]; then

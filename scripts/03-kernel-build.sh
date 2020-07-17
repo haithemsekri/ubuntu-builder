@@ -1,5 +1,5 @@
 #!/bin/bash
-#apt-get install -y chrpath gawk texinfo libsdl1.2-dev whiptail diffstat cpio libssl-dev
+#apt-get install -y libssl-dev libncurses-dev
 source $(dirname $(realpath $0))/00-common-env.sh
 
 [ -z $KERNEL_DOM0_URL ]           && echo "KERNEL_DOM0_URL not defined" && exit 0
@@ -30,7 +30,7 @@ if [ "$1" == "--kernel-dom0-build" ]; then
    fi
 
    make menuconfig ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
-   make -j 8 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
+   make -j 4 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
    [ ! -f "$BUILD_TMP_DIR/$KERNEL_DOM0_IMG" ] && echo "$BUILD_TMP_DIR/$KERNEL_DOM0_IMG : not found"  && exit 0
    [ ! -f "$BUILD_TMP_DIR/$KERNEL_DOM0_DTB" ] && echo "$BUILD_TMP_DIR/$KERNEL_DOM0_DTB : not found"  && exit 0
 
@@ -41,10 +41,7 @@ if [ "$1" == "--kernel-dom0-build" ]; then
    make modules_install -C $BUILD_TMP_DIR INSTALL_MOD_PATH=$TMP_INSTALL_DIR/lib/modules > $TMP_INSTALL_DIR/lib/modules/modules_install.log
    cp $BUILD_TMP_DIR/$KERNEL_DOM0_IMG $TMP_INSTALL_DIR/boot/$KERNEL_DOM0_DISTRO_NAME.bin
    cp $BUILD_TMP_DIR/$KERNEL_DOM0_DTB $TMP_INSTALL_DIR/boot/$KERNEL_DOM0_DISTRO_NAME.dtb
-   cp $SCRIPTS_DIR/files/kernel-boot-env.cmd $TMP_INSTALL_DIR/boot/kernel-boot.cmd
    cd $TMP_INSTALL_DIR/boot/
-   mkimage -C none -A arm -T script -d kernel-boot.cmd kernel-boot.scr
-   ln -sf kernel-boot.scr boot.scr
    ln -sf $KERNEL_DOM0_DISTRO_NAME.bin kernel
    ln -sf $KERNEL_DOM0_DISTRO_NAME.dtb dtb
    cd $TMP_INSTALL_DIR
@@ -68,7 +65,7 @@ if [ "$1" == "--kernel-domu-build" ]; then
    fi
 
    make menuconfig ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
-   make -j 8 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
+   make -j 4 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
    [ ! -f "$BUILD_TMP_DIR/$KERNEL_DOMU_IMG" ] && echo "$BUILD_TMP_DIR/$KERNEL_DOMU_IMG : not found"  && exit 0
 
    TMP_INSTALL_DIR="$BUILD_DIR/kernel-install-tmp"

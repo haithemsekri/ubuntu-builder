@@ -30,14 +30,14 @@ echo -e "\e[30;48;5;82mRun: $SCRIPT \e[0m"; $SCRIPT $1
 
 [ ! -f $LOADER_DISK ] && echo -e "\e[41mFailed: failed not found : $LOADER_DISK \e[0m" && exit 0
 [ ! -f $BOOTFS_DISK ] && echo -e "\e[41mFailed: failed not found : $BOOTFS_DISK \e[0m" && exit 0
-[ ! -f $ROOTFS_TARGET_DISK ] && echo -e "\e[41mFailed: failed not found : $ROOTFS_TARGET_DISK \e[0m" && exit 0
+[ ! -f $ROOTFS_BASE_DISK ] && echo -e "\e[41mFailed: failed not found : $ROOTFS_BASE_DISK \e[0m" && exit 0
 
 rm -rf $IMAGES_DIR
 mkdir -p $IMAGES_DIR
 
 cp $LOADER_DISK $IMAGES_DIR/loader.img
 cp $BOOTFS_DISK $IMAGES_DIR/bootfs.$EXT_FS_TYPE
-cp $ROOTFS_TARGET_DISK $IMAGES_DIR/rootfs.$EXT_FS_TYPE
+cp $ROOTFS_BASE_DISK $IMAGES_DIR/rootfs.$EXT_FS_TYPE
 cp $SCRIPTS_DIR/files/91-prod-image-flash.sh $IMAGES_DIR/flash.sh
 
 chmod 755 $IMAGES_DIR/flash.sh
