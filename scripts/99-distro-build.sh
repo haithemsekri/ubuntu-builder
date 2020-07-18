@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source $(dirname $(realpath $0))/00-common-env.sh
+
 if [ "$1" == "--help" ]; then
    echo "Available commands:"
    echo "   --rootfs-base-build"

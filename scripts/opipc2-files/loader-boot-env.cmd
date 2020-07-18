@@ -2,7 +2,7 @@
 #mkimage -C none -A arm -T script -d boot.cmd boot.scr
 #bootm_size=0xa000000
 #fdt_addr_r=0x4FA00000
-#kernel_addr_r=0x40080000
+#LINUX_addr_r=0x40080000
 #pxefile_addr_r=0x4FD00000
 #ramdisk_addr_r=0x4FE00000
 #scriptaddr=0x4FC00000

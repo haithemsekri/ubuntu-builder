@@ -27,7 +27,7 @@ for ((i = 2; i <= $#; i++ )); do
 done
 
 [ "$IMAGE_SIZE_MB" == "0" ] && echo "cannot create an empty image" && exit 0
-IMAGE_SIZE_MB=$(($IMAGE_SIZE_MB+2))
+IMAGE_SIZE_MB=$(($IMAGE_SIZE_MB+$MBR_SIZE_MB))
 echo "IMAGE_SIZE_MB: $IMAGE_SIZE_MB"
 echo "IMAGE_BLOCKS: $((2048*$IMAGE_SIZE_MB))"
 
@@ -37,7 +37,7 @@ dd if=/dev/zero of=$IMAGE_PATH bs=1M count=2 conv=notrunc
 /sbin/parted $IMAGE_PATH --script -- mklabel msdos  &> /dev/null
 
 START_BLOCKS=0
-END_BLOCKS=4095
+END_BLOCKS=$(($MBR_SIZE_MB*2048-1))
 PART_NB=0
 for ((i = 2; i <= $#; i++ )); do
    PART_SIZE="${!i}"

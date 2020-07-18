@@ -1,15 +1,5 @@
 #!/bin/bash
 #apt-get install -y libssl-dev libncurses-dev
-source $(dirname $(realpath $0))/00-common-env.sh
-
-[ -z $KERNEL_DOM0_URL ]           && echo "KERNEL_DOM0_URL not defined" && exit 0
-[ -z $KERNEL_DOM0_DL_FILE ]       && KERNEL_DOM0_DL_FILE="$DL_DIR/$(basename $KERNEL_DOM0_URL)"
-[ ! -f $KERNEL_DOM0_DL_FILE ]     && wget $KERNEL_DOM0_URL -O $KERNEL_DOM0_DL_FILE
-[ ! -f $KERNEL_DOM0_DL_FILE ]     && echo "$KERNEL_DOM0_DL_FILE : file not found"
-[ -z $KERNEL_DOMU_URL ]           && echo "KERNEL_DOMU_URL not defined" && exit 0
-[ -z $KERNEL_DOMU_DL_FILE ]       && KERNEL_DOMU_DL_FILE="$DL_DIR/$(basename $KERNEL_DOMU_URL)"
-[ ! -f $KERNEL_DOMU_DL_FILE ]     && wget $KERNEL_DOMU_URL -O $KERNEL_DOMU_DL_FILE
-[ ! -f $KERNEL_DOMU_DL_FILE ]     && echo "$KERNEL_DOMU_DL_FILE : file not found"
 
 if [ "$TARGET_ARCH" == "arm64" ]; then
    [ -z $L_ARCH ]        && export L_ARCH="arm64"
@@ -18,69 +8,79 @@ elif [ "$TARGET_ARCH" == "arm32" ]; then
 fi
 
 if [ "$1" == "--kernel-dom0-build" ]; then
-   echo "delete $KERNEL_DOM0_DISTRO"
-   rm -rf "$KERNEL_DOM0_DISTRO"
+   [ -z $LINUX_DOM0_URL ]           && echo "LINUX_DOM0_URL not defined" && exit 0
+   [ -z $LINUX_DOM0_DL_FILE ]       && LINUX_DOM0_DL_FILE="$DL_DIR/$(basename $LINUX_DOM0_URL)"
+   [ ! -f $LINUX_DOM0_DL_FILE ]     && wget $LINUX_DOM0_URL -O $LINUX_DOM0_DL_FILE
+   [ ! -f $LINUX_DOM0_DL_FILE ]     && echo "$LINUX_DOM0_DL_FILE : file not found"
+   [ ! -f "$L_CROSS_COMPILE"gcc ]   &&  echo "L_CROSS_COMPILEgcc: file not found" && exit 0
+   echo "delete $LINUX_DOM0_PACKAGE_TAR"
+   rm -rf "$LINUX_DOM0_PACKAGE_TAR"
    BUILD_TMP_DIR="$BUILD_DIR/linux-dom0-build"
    if [ ! -d $BUILD_TMP_DIR ]; then
       echo "Setup: $BUILD_TMP_DIR"
       mkdir -p $BUILD_TMP_DIR
-      tar -xf $KERNEL_DOM0_DL_FILE -C $BUILD_TMP_DIR
-      patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $KERNEL_DOM0_PATCH
-      cp $KERNEL_DOM0_CONFIG $BUILD_TMP_DIR/.config
+      tar -xf $LINUX_DOM0_DL_FILE -C $BUILD_TMP_DIR
+      patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $LINUX_DOM0_PATCH
+      cp $LINUX_DOM0_CONFIG $BUILD_TMP_DIR/.config
    fi
 
    make menuconfig ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
    make -j 4 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
-   [ ! -f "$BUILD_TMP_DIR/$KERNEL_DOM0_IMG" ] && echo "$BUILD_TMP_DIR/$KERNEL_DOM0_IMG : not found"  && exit 0
-   [ ! -f "$BUILD_TMP_DIR/$KERNEL_DOM0_DTB" ] && echo "$BUILD_TMP_DIR/$KERNEL_DOM0_DTB : not found"  && exit 0
+   [ ! -f "$BUILD_TMP_DIR/$LINUX_DOM0_IMG" ] && echo "$BUILD_TMP_DIR/$LINUX_DOM0_IMG : not found"  && exit 0
+   [ ! -f "$BUILD_TMP_DIR/$LINUX_DOM0_DTB" ] && echo "$BUILD_TMP_DIR/$LINUX_DOM0_DTB : not found"  && exit 0
 
    TMP_INSTALL_DIR="$BUILD_DIR/kernel-install-tmp"
    rm -rf $TMP_INSTALL_DIR
    mkdir -p $TMP_INSTALL_DIR/boot
    mkdir -p $TMP_INSTALL_DIR/lib/modules
    make modules_install -C $BUILD_TMP_DIR INSTALL_MOD_PATH=$TMP_INSTALL_DIR/lib/modules > $TMP_INSTALL_DIR/lib/modules/modules_install.log
-   cp $BUILD_TMP_DIR/$KERNEL_DOM0_IMG $TMP_INSTALL_DIR/boot/$KERNEL_DOM0_DISTRO_NAME.bin
-   cp $BUILD_TMP_DIR/$KERNEL_DOM0_DTB $TMP_INSTALL_DIR/boot/$KERNEL_DOM0_DISTRO_NAME.dtb
+   cp $BUILD_TMP_DIR/$LINUX_DOM0_IMG $TMP_INSTALL_DIR/boot/$LINUX_DOM0_PACKAGE_NAME.bin
+   cp $BUILD_TMP_DIR/$LINUX_DOM0_DTB $TMP_INSTALL_DIR/boot/$LINUX_DOM0_PACKAGE_NAME.dtb
    cd $TMP_INSTALL_DIR/boot/
-   ln -sf $KERNEL_DOM0_DISTRO_NAME.bin kernel
-   ln -sf $KERNEL_DOM0_DISTRO_NAME.dtb dtb
+   ln -sf $LINUX_DOM0_PACKAGE_NAME.bin kernel
+   ln -sf $LINUX_DOM0_PACKAGE_NAME.dtb dtb
    cd $TMP_INSTALL_DIR
-   tar -I 'pxz -T 0 -9' -cf $KERNEL_DOM0_DISTRO .
+   tar -I 'pxz -T 0 -9' -cf $LINUX_DOM0_PACKAGE_TAR .
    cd $WORKSPACE
    rm -rf $TMP_INSTALL_DIR
-   [ ! -f $KERNEL_DOM0_DISTRO ] && echo "$KERNEL_DOM0_DISTRO : not found"  && exit 0
-   echo "Kernel-dom0 Image: $KERNEL_DOM0_DISTRO"
+   [ ! -f $LINUX_DOM0_PACKAGE_TAR ] && echo "$LINUX_DOM0_PACKAGE_TAR : not found"  && exit 0
+   echo "Kernel-dom0 Image: $LINUX_DOM0_PACKAGE_TAR"
 fi
 
 if [ "$1" == "--kernel-domu-build" ]; then
-   echo "delete $KERNEL_DOMU_DISTRO"
-   rm -rf "$KERNEL_DOMU_DISTRO"
+   [ -z $LINUX_DOMU_URL ]           && echo "LINUX_DOMU_URL not defined" && exit 0
+   [ -z $LINUX_DOMU_DL_FILE ]       && LINUX_DOMU_DL_FILE="$DL_DIR/$(basename $LINUX_DOMU_URL)"
+   [ ! -f $LINUX_DOMU_DL_FILE ]     && wget $LINUX_DOMU_URL -O $LINUX_DOMU_DL_FILE
+   [ ! -f $LINUX_DOMU_DL_FILE ]     && echo "$LINUX_DOMU_DL_FILE : file not found"
+   [ ! -f "$L_CROSS_COMPILE"gcc ]   &&  echo "L_CROSS_COMPILEgcc: file not found" && exit 0
+   echo "delete $LINUX_DOMU_PACKAGE_TAR"
+   rm -rf "$LINUX_DOMU_PACKAGE_TAR"
    BUILD_TMP_DIR="$BUILD_DIR/linux-domu-build"
    if [ ! -d $BUILD_TMP_DIR ]; then
       echo "Setup: $BUILD_TMP_DIR"
       mkdir -p $BUILD_TMP_DIR
-      tar -xf $KERNEL_DOMU_DL_FILE -C $BUILD_TMP_DIR
-      patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $KERNEL_DOMU_PATCH
-      cp $KERNEL_DOMU_CONFIG $BUILD_TMP_DIR/.config
+      tar -xf $LINUX_DOMU_DL_FILE -C $BUILD_TMP_DIR
+      patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $LINUX_DOMU_PATCH
+      cp $LINUX_DOMU_CONFIG $BUILD_TMP_DIR/.config
    fi
 
    make menuconfig ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
    make -j 4 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
-   [ ! -f "$BUILD_TMP_DIR/$KERNEL_DOMU_IMG" ] && echo "$BUILD_TMP_DIR/$KERNEL_DOMU_IMG : not found"  && exit 0
+   [ ! -f "$BUILD_TMP_DIR/$LINUX_DOMU_IMG" ] && echo "$BUILD_TMP_DIR/$LINUX_DOMU_IMG : not found"  && exit 0
 
    TMP_INSTALL_DIR="$BUILD_DIR/kernel-install-tmp"
    rm -rf $TMP_INSTALL_DIR
    mkdir -p $TMP_INSTALL_DIR/boot
    mkdir -p $TMP_INSTALL_DIR/lib/modules
    make modules_install -C $BUILD_TMP_DIR INSTALL_MOD_PATH=$TMP_INSTALL_DIR/lib/modules > $TMP_INSTALL_DIR/lib/modules/modules_install.log
-   cp $BUILD_TMP_DIR/$KERNEL_DOMU_IMG $TMP_INSTALL_DIR/boot/$KERNEL_DOMU_DISTRO_NAME.bin
+   cp $BUILD_TMP_DIR/$LINUX_DOMU_IMG $TMP_INSTALL_DIR/boot/$LINUX_DOMU_PACKAGE_NAME.bin
 
    cd $TMP_INSTALL_DIR/boot/
-   ln -sf $KERNEL_DOMU_DISTRO_NAME.bin kernel
+   ln -sf $LINUX_DOMU_PACKAGE_NAME.bin kernel
    cd $TMP_INSTALL_DIR
-   tar -I 'pxz -T 0 -9' -cf $KERNEL_DOMU_DISTRO .
+   tar -I 'pxz -T 0 -9' -cf $LINUX_DOMU_PACKAGE_TAR .
    cd $WORKSPACE
    rm -rf $TMP_INSTALL_DIR
-   [ ! -f $KERNEL_DOMU_DISTRO ] && echo "$KERNEL_DOMU_DISTRO : not found"  && exit 0
-   echo "Kernel-domu Image: $KERNEL_DOMU_DISTRO"
+   [ ! -f $LINUX_DOMU_PACKAGE_TAR ] && echo "$LINUX_DOMU_PACKAGE_TAR : not found"  && exit 0
+   echo "Kernel-domu Image: $LINUX_DOMU_PACKAGE_TAR"
 fi

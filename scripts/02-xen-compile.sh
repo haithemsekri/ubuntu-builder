@@ -1,55 +1,50 @@
 #!/bin/bash
 
-source $(dirname $(realpath $0))/00-common-env.sh
-
-[ -z $DL_DIR ]                 && echo "DL_DIR not defined" && exit 0
-[ -z $DISTRO_NAME ]            && echo "DISTRO_NAME not defined" && exit 0
-[ -z $TARGET_ARCH ]            && echo "TARGET_ARCH not defined" && exit 0
-[ -z $SCRIPTS_DIR ]            && echo "SCRIPTS_DIR not defined" && exit 0
-[ -z $ROOTFS_BASE_DISK ]     && echo "ROOTFS_BASE_DISK not defined" && exit 0
-[ ! -f $ROOTFS_BASE_DISK ]   &&  echo "$ROOTFS_BASE_DISK not found" && exit 0
-
-[ -z $XEN_DL_URL ]    && XEN_DL_URL="https://iweb.dl.sourceforge.net/project/arm-rootfs-ressources/xen-4.11.4.tar.xz"
-[ -z $XEN_DL_FILE ]   && XEN_DL_FILE="$DL_DIR/$(basename $XEN_DL_URL)"
-[ ! -f $XEN_DL_FILE ] && wget $XEN_DL_URL -O $XEN_DL_FILE
-[ ! -f $XEN_DL_FILE ] &&  echo "$XEN_DL_FILE not found" && exit 0
-
 if [ "$1" == "--xen-distro-build" ]; then
-   echo "delete $XEN_DISTRO_IMAGE_FILE"
-   rm -rf $XEN_DISTRO_IMAGE_FILE
+   [ -z "$XEN_EARLY_PRINTK" ] &&  echo "XEN_EARLY_PRINTK: not defined" && exit 0
+   [ -z $XEN_DL_FILE ]   && XEN_DL_FILE="$DL_DIR/$(basename $XEN_DL_URL)"
+   [ ! -f $XEN_DL_FILE ] && wget $XEN_DL_URL -O $XEN_DL_FILE
+   [ ! -f $XEN_DL_FILE ] &&  echo "$XEN_DL_FILE not found" && exit 0
+   [ ! -f "$L_CROSS_COMPILE"gcc ] &&  echo "L_CROSS_COMPILEgcc: file not found" && exit 0
+   echo "delete $XEN_DISTRO_PACKAGE_TAR"
+   rm -rf $XEN_DISTRO_PACKAGE_TAR
    TMP_BUILD_DIR="$BUILD_DIR/xen-distro-build"
    if [ ! -d $TMP_BUILD_DIR ]; then
       echo "Setup: $TMP_BUILD_DIR"
       mkdir -p $TMP_BUILD_DIR
       tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
    fi
-
-   [ "$TARGET_NAME" == "opipc2" ] && XEN_EARLY_PRINTK="sun7i"
-   [ -z "$XEN_EARLY_PRINTK" ] &&  echo "XEN_EARLY_PRINTK: not defined" && exit 0
    cd $TMP_BUILD_DIR
    /usr/bin/make -j4 dist-xen XEN_TARGET_ARCH="$L_CROSS_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" CONFIG_DEBUG=y debug=y CONFIG_EARLY_PRINTK="$XEN_EARLY_PRINTK"
    [ ! -f $TMP_BUILD_DIR/xen/xen ] && echo "$TMP_BUILD_DIR/xen/xen : file not found"  && exit 1
    TMP_TAR_DIR="$BUILD_DIR/tar-tmp"
    rm -rf $TMP_TAR_DIR
    mkdir -p $TMP_TAR_DIR/boot
-   cp $TMP_BUILD_DIR/xen/xen $TMP_TAR_DIR/boot/xen
+   cp $TMP_BUILD_DIR/xen/xen $TMP_TAR_DIR/boot/$XEN_PACKAGE_NAME.bin
+   cd $TMP_TAR_DIR/boot/
+   ln -sf $XEN_PACKAGE_NAME.bin xen
    cd $TMP_TAR_DIR
-   tar -I 'pxz -T 0 -9' -cf $XEN_DISTRO_IMAGE_FILE .
-   chmod 666 $XEN_DISTRO_IMAGE_FILE
+   tar -I 'pxz -T 0 -9' -cf $XEN_DISTRO_PACKAGE_TAR .
+   chmod 666 $XEN_DISTRO_PACKAGE_TAR
    cd $WORKSPACE
    rm -rf $TMP_TAR_DIR
-   echo "Xen Distro Image: $XEN_DISTRO_IMAGE_FILE"
+   echo "Xen Distro Image: $XEN_DISTRO_PACKAGE_TAR"
 fi
 
 if [ "$1" == "--xen-tools-build" ]; then
-   echo "delete $XEN_TOOLS_IMAGE_FILE"
-   rm -rf $XEN_TOOLS_IMAGE_FILE
+   [ -z $XEN_DL_FILE ]   && XEN_DL_FILE="$DL_DIR/$(basename $XEN_DL_URL)"
+   [ ! -f $XEN_DL_FILE ] && wget $XEN_DL_URL -O $XEN_DL_FILE
+   [ ! -f $XEN_DL_FILE ] &&  echo "$XEN_DL_FILE not found" && exit 0
+   [ ! -f $ROOTFS_BASE_DISK ]   &&  echo "$ROOTFS_BASE_DISK not found" && exit 0
+   [ ! -f "$L_CROSS_COMPILE"gcc ] &&  echo "L_CROSS_COMPILEgcc: file not found" && exit 0
+   echo "delete $XEN_TOOLS_PACKAGE_TAR"
+   rm -rf $XEN_TOOLS_PACKAGE_TAR
    TMP_BUILD_DIR="$BUILD_DIR/xen-tools-build"
    if [ ! -d $TMP_BUILD_DIR ]; then
       echo "Setup: $TMP_BUILD_DIR"
       mkdir -p $TMP_BUILD_DIR
       tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
-      patch --verbose $TMP_BUILD_DIR/xen/include/public/arch-arm.h $SCRIPTS_DIR/files/libgcc-4-xen-arm.patch
+      patch --verbose $TMP_BUILD_DIR/xen/include/public/arch-arm.h $TARGET_FILES/xen-arm-libgcc-4.patch
    fi
 
    if [ "$USE_SYSTEMD" == "YES" ]; then
@@ -79,8 +74,8 @@ if [ "$1" == "--xen-tools-build" ]; then
    MTAB_ENTRY="$(mount | egrep "$ROOTFS_BASE_DISK" | egrep "$L_SYSROOT")"
    [ -z "$MTAB_ENTRY" ] &&  echo "Failed to mount disk" &&  exit 1
    [ ! -f "$L_SYSROOT/cross-build-env.sh" ] &&  echo "L_SYSROOT/cross-build-env.sh : file not found" && exit 1
-   source "$L_SYSROOT/cross-build-env.sh"
 
+   source "$L_SYSROOT/cross-build-env.sh"
    TMP_TAR_DIR="$BUILD_DIR/xen-install-tmp"
 
 cat <<EOF > $BUILD_DIR/xen-tools-compile.sh
@@ -191,12 +186,10 @@ EOF
 fi
 
    cd $TMP_TAR_DIR
-   tar -I 'pxz -T 0 -9' -cf $XEN_TOOLS_IMAGE_FILE .
-   chmod 666 $XEN_TOOLS_IMAGE_FILE
+   tar -I 'pxz -T 0 -9' -cf $XEN_TOOLS_PACKAGE_TAR .
+   chmod 666 $XEN_TOOLS_PACKAGE_TAR
    cd $WORKSPACE
    rm -rf $TMP_TAR_DIR
    rm -rf $BUILD_DIR/xen-tools-compile.sh
-   echo "Xen Tools Image: $XEN_TOOLS_IMAGE_FILE"
+   echo "Xen Tools Image: $XEN_TOOLS_PACKAGE_TAR"
 fi
-
-#tar --skip-old-file -xf   /home/hs/Devel/github/xen-arm-builder/centos-7-arm64-opipc2/xen-arm64.tar.xz -C /mnt/sdb1/
