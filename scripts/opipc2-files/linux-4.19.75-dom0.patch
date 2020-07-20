@@ -1,5 +1,6 @@
---- include/xen/interface/io/blkif.h.origin	2020-05-23 20:32:40.790540524 +0200
-+++ include/xen/interface/io/blkif.h	2020-05-23 21:04:34.476891524 +0200
+diff -ur linux-origin/include/xen/interface/io/blkif.h linux/include/xen/interface/io/blkif.h
+--- linux-origin/include/xen/interface/io/blkif.h	2019-09-21 07:17:15.000000000 +0200
++++ linux/include/xen/interface/io/blkif.h	2020-07-20 17:40:05.274481069 +0200
 @@ -194,7 +194,7 @@
  struct blkif_request_rw {
  	uint8_t        nr_segments;  /* number of segments                   */

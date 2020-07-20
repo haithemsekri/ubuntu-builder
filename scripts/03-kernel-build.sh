@@ -25,7 +25,7 @@ if [ "$1" == "--all" ] || [ "$1" == "--kernel-dom0-build" ]; then
       echo "Setup: $BUILD_TMP_DIR"
       mkdir -p $BUILD_TMP_DIR
       tar -xf $LINUX_DOM0_DL_FILE -C $BUILD_TMP_DIR
-      patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $LINUX_DOM0_PATCH
+      [ -f $LINUX_DOM0_PATCH ] &&  echo "linux dom0 patch" && patch --verbose -d $BUILD_TMP_DIR -p1 < $LINUX_DOM0_PATCH
       cp $LINUX_DOM0_CONFIG $BUILD_TMP_DIR/.config
       # $CONFIGURE_CMD
    fi
@@ -71,6 +71,7 @@ if [ "$1" == "--all" ] || [ "$1" == "--kernel-domu-build" ]; then
       tar -xf $LINUX_DOMU_DL_FILE -C $BUILD_TMP_DIR
       patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $LINUX_DOMU_PATCH
       cp $LINUX_DOMU_CONFIG $BUILD_TMP_DIR/.config
+      [ -f $LINUX_DOMU_PATCH ] &&  echo "linux domu patch" && patch --verbose -d $BUILD_TMP_DIR -p1 < $LINUX_DOMU_PATCH
       # $CONFIGURE_CMD
    fi
 

@@ -139,10 +139,11 @@ build_sd_image() {
 
 ####################################################################### Build
 
-if [ "$1" == "--all" ]; then
 build_rootfs_image $1 $2
+if [ "$1" == "--all" ]; then
 build_bootfs_image $1 $2
 build_sd_image $1 $2
+fi
 
 ln -sf $BOOTFS_DISK $IMAGES_DIR/bootfs
 ln -sf $ROOTFS_TARGET_DISK $IMAGES_DIR/rootfs
@@ -156,4 +157,3 @@ echo -e "ROOTFS_TARGET_DISK: $ROOTFS_TARGET_DISK"
 echo -e "ROOTFS_TARGET_TAR:  $ROOTFS_TARGET_TAR"
 echo -e "SD_DISK_IMG:        $SD_DISK_IMG"
 echo -e "MBR_DISK:           $MBR_DISK"
-fi

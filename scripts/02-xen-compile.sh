@@ -51,7 +51,8 @@ if [ "$1" == "--all" ] || [ "$1" == "--xen-tools-build" ]; then
       echo "Setup: $TMP_BUILD_DIR"
       mkdir -p $TMP_BUILD_DIR
       tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
-      patch --verbose $TMP_BUILD_DIR/xen/include/public/arch-arm.h $TARGET_FILES/xen-arm-libgcc-4.patch
+      #diff -ur xen-4.11.4.orig/ xen-4.11.4/ > libgcc-4.patch
+      [ -f $XEN_TOOLS_PATCH ] &&  echo "xen tools patch" && patch --verbose -d $TMP_BUILD_DIR -p1 < $XEN_TOOLS_PATCH
    fi
 
    if [ "$USE_SYSTEMD" == "YES" ]; then
@@ -122,8 +123,8 @@ LDFLAGS="${L_LDFLAGS}" \
 PYTHON="/usr/bin/python2" \
 LD_LIBRARY_PATH="${L_SYSROOT}/lib" \
 /usr/bin/make dist-tools -j$BUILD_CPU_CORE \
-CC="${L_CC} ${L_CFLAGS} -Wno-address-of-packed-member" \
-CXX="${L_CXX} ${L_CXXFLAGS} -Wno-address-of-packed-member" \
+CC="${L_CC} ${L_CFLAGS}" \
+CXX="${L_CXX} ${L_CXXFLAGS}" \
 LD="${L_LD} ${L_LDFLAGS}" \
 AR="${L_AR}" \
 STRIP="${L_STRIP}" \

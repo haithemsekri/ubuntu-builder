@@ -4,6 +4,8 @@
 [ -z $XEN_NAME ]                 && XEN_NAME="xen-4.11.4"
 [ -z $XEN_EARLY_PRINTK ]         && XEN_EARLY_PRINTK="sun7i"
 [ -z $XEN_DL_URL ]               && XEN_DL_URL="https://iweb.dl.sourceforge.net/project/arm-rootfs-ressources/xen-4.11.4.tar.xz"
+[ -z $XEN_TOOLS_PATCH ]          && XEN_TOOLS_PATCH="$TARGET_FILES/xen-arm-libgcc-4.patch"
+
 
 ####################################################################### Linux-dom0
 [ -z $LINUX_DOM0_NAME ]          && LINUX_DOM0_NAME="linux-4.19.75"
