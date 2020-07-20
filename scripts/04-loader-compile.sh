@@ -1,7 +1,8 @@
 #!/bin/bash
 ## apt-get --no-install-recommends install python python-dev python3-dev lib32z1 swig device-tree-compiler
 
-if [ "$1" == "--loader-build" ]; then
+if [ "$1" == "--all" ] || [ "$1" == "--loader-build" ]; then
+   echo -e "\e[30;48;5;82mSetup boot loader\e[0m"
    echo "delete $BOOT_PACKAGE_TAR"
    rm -rf "$BOOT_PACKAGE_TAR"
 
@@ -26,17 +27,16 @@ if [ "$1" == "--loader-build" ]; then
       tar -xf $ATF_DL_FILE -C $ATF_BUILD_DIR
    fi
 
-   make -j 8 $ATF_MAKE_ARGS -C $ATF_BUILD_DIR
+   make -j$BUILD_CPU_CORE $ATF_MAKE_ARGS -C $ATF_BUILD_DIR 1> /dev/null
    CK_PATH=$ATF_BUILD_DIR/build/$ATF_PLAT/debug/bl31.bin [ ! -f $CK_PATH ] && echo "$CK_PATH : not found"  && exit 0
    cp $ATF_BUILD_DIR/build/$ATF_PLAT/debug/bl31.bin $UBOOT_BUILD_DIR/
 
-   make -j8 $UBOOT_MAKE_ARGS CFLAGS="$UBOOT_CFLAGS" -C $UBOOT_BUILD_DIR
+   make -j$BUILD_CPU_CORE $UBOOT_MAKE_ARGS CFLAGS="$UBOOT_CFLAGS" -C $UBOOT_BUILD_DIR 1> /dev/null
    CK_PATH=$UBOOT_BUILD_DIR/$UBOOT_ATF_BIN [ ! -f $CK_PATH ] && echo "$CK_PATH : not found"  && exit 0
 
    cd $UBOOT_BUILD_DIR
    cp $UBOOT_ATF_BIN $TARGET_NAME-$BOOT_LOADER_NAME.bin
    ln -sf $TARGET_NAME-$BOOT_LOADER_NAME.bin uboot-spl
-   tar -I 'pxz -T 0 -9' -cf $BOOT_PACKAGE_TAR bl31.bin u-boot.itb uboot-spl $TARGET_NAME-$BOOT_LOADER_NAME.bin
+   $TAR_CXF_CMD $BOOT_PACKAGE_TAR bl31.bin u-boot.itb uboot-spl $TARGET_NAME-$BOOT_LOADER_NAME.bin
    cd $WORKSPACE
-   echo "Boot Image: $BOOT_PACKAGE_TAR"
 fi

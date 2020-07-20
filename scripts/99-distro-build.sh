@@ -4,6 +4,7 @@ source $(dirname $(realpath $0))/00-common-env.sh
 
 if [ "$1" == "--help" ]; then
    echo "Available commands:"
+   echo "   --all"
    echo "   --rootfs-base-build"
    echo "   --toolchain-build"
    echo "   --xen-distro-build"
@@ -18,3 +19,4 @@ source $(dirname $(realpath $0))/01-rootfs-toolchain-setup.sh
 source $(dirname $(realpath $0))/02-xen-compile.sh
 source $(dirname $(realpath $0))/03-kernel-build.sh
 source $(dirname $(realpath $0))/04-loader-compile.sh
+source $(dirname $(realpath $0))/05-target-image.sh

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-if [ "$1" == "--xen-distro-build" ]; then
+if [ "$1" == "--all" ] || [ "$1" == "--xen-distro-build" ]; then
+   echo -e "\e[30;48;5;82mSetup xen dist\e[0m"
    [ -z "$XEN_EARLY_PRINTK" ] &&  echo "XEN_EARLY_PRINTK: not defined" && exit 0
    [ -z $XEN_DL_FILE ]   && XEN_DL_FILE="$DL_DIR/$(basename $XEN_DL_URL)"
    [ ! -f $XEN_DL_FILE ] && wget $XEN_DL_URL -O $XEN_DL_FILE
@@ -9,13 +10,18 @@ if [ "$1" == "--xen-distro-build" ]; then
    echo "delete $XEN_DISTRO_PACKAGE_TAR"
    rm -rf $XEN_DISTRO_PACKAGE_TAR
    TMP_BUILD_DIR="$BUILD_DIR/xen-distro-build"
+   CONFIGURE_CMD="make menuconfig XEN_TARGET_ARCH=$L_CROSS_ARCH CROSS_COMPILE=$L_CROSS_COMPILE -C $TMP_BUILD_DIR/xen"
+   echo "CONFIGURE_CMD: $CONFIGURE_CMD"
+   MAKE_CMD="/usr/bin/make -j$BUILD_CPU_CORE dist-xen XEN_TARGET_ARCH=$L_CROSS_ARCH CROSS_COMPILE=$L_CROSS_COMPILE CONFIG_DEBUG=y CONFIG_EARLY_PRINTK=$XEN_EARLY_PRINTK -C $TMP_BUILD_DIR"
+   echo "MAKE_CMD: $MAKE_CMD"
    if [ ! -d $TMP_BUILD_DIR ]; then
       echo "Setup: $TMP_BUILD_DIR"
       mkdir -p $TMP_BUILD_DIR
       tar -xf $XEN_DL_FILE -C $TMP_BUILD_DIR
+      cp $XEN_DISTRO_CONFIG $TMP_BUILD_DIR/xen/.config
+      # $CONFIGURE_CMD
    fi
-   cd $TMP_BUILD_DIR
-   /usr/bin/make -j4 dist-xen XEN_TARGET_ARCH="$L_CROSS_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" CONFIG_DEBUG=y debug=y CONFIG_EARLY_PRINTK="$XEN_EARLY_PRINTK"
+   $MAKE_CMD 1> /dev/null
    [ ! -f $TMP_BUILD_DIR/xen/xen ] && echo "$TMP_BUILD_DIR/xen/xen : file not found"  && exit 1
    TMP_TAR_DIR="$BUILD_DIR/tar-tmp"
    rm -rf $TMP_TAR_DIR
@@ -24,14 +30,15 @@ if [ "$1" == "--xen-distro-build" ]; then
    cd $TMP_TAR_DIR/boot/
    ln -sf $XEN_PACKAGE_NAME.bin xen
    cd $TMP_TAR_DIR
-   tar -I 'pxz -T 0 -9' -cf $XEN_DISTRO_PACKAGE_TAR .
+   $TAR_CXF_CMD $XEN_DISTRO_PACKAGE_TAR .
    chmod 666 $XEN_DISTRO_PACKAGE_TAR
    cd $WORKSPACE
    rm -rf $TMP_TAR_DIR
-   echo "Xen Distro Image: $XEN_DISTRO_PACKAGE_TAR"
+   [ ! -f $XEN_DISTRO_PACKAGE_TAR ] &&  echo "$XEN_DISTRO_PACKAGE_TAR not found" && exit 0
 fi
 
-if [ "$1" == "--xen-tools-build" ]; then
+if [ "$1" == "--all" ] || [ "$1" == "--xen-tools-build" ]; then
+   echo -e "\e[30;48;5;82mSetup xen tools\e[0m"
    [ -z $XEN_DL_FILE ]   && XEN_DL_FILE="$DL_DIR/$(basename $XEN_DL_URL)"
    [ ! -f $XEN_DL_FILE ] && wget $XEN_DL_URL -O $XEN_DL_FILE
    [ ! -f $XEN_DL_FILE ] &&  echo "$XEN_DL_FILE not found" && exit 0
@@ -81,6 +88,8 @@ if [ "$1" == "--xen-tools-build" ]; then
 cat <<EOF > $BUILD_DIR/xen-tools-compile.sh
 #!/bin/bash
 
+exec 1> /dev/null
+
 cd $TMP_BUILD_DIR
 
 ./configure \
@@ -112,9 +121,9 @@ XEN_TARGET_ARCH="$L_CROSS_ARCH" \
 LDFLAGS="${L_LDFLAGS}" \
 PYTHON="/usr/bin/python2" \
 LD_LIBRARY_PATH="${L_SYSROOT}/lib" \
-/usr/bin/make dist-tools -j4 \
-CC="${L_CC} ${L_CFLAGS}" \
-CXX="${L_CXX} ${L_CXXFLAGS}" \
+/usr/bin/make dist-tools -j$BUILD_CPU_CORE \
+CC="${L_CC} ${L_CFLAGS} -Wno-address-of-packed-member" \
+CXX="${L_CXX} ${L_CXXFLAGS} -Wno-address-of-packed-member" \
 LD="${L_LD} ${L_LDFLAGS}" \
 AR="${L_AR}" \
 STRIP="${L_STRIP}" \
@@ -131,7 +140,7 @@ XEN_TARGET_ARCH="${L_CROSS_ARCH}" \
 LDFLAGS="${L_LDFLAGS}" \
 PYTHON="/usr/bin/python2" \
 LD_LIBRARY_PATH="${L_SYSROOT}/lib" \
-/usr/bin/make -j4 install-tools DESTDIR="$TMP_TAR_DIR" \
+/usr/bin/make -j$BUILD_CPU_CORE install-tools DESTDIR="$TMP_TAR_DIR" \
 CC="${L_CC} ${L_CFLAGS}" \
 CXX="${L_CXX} ${L_CXXFLAGS}" \
 LD="${L_LD} ${L_LDFLAGS}" \
@@ -186,10 +195,10 @@ EOF
 fi
 
    cd $TMP_TAR_DIR
-   tar -I 'pxz -T 0 -9' -cf $XEN_TOOLS_PACKAGE_TAR .
+   $TAR_CXF_CMD $XEN_TOOLS_PACKAGE_TAR .
    chmod 666 $XEN_TOOLS_PACKAGE_TAR
    cd $WORKSPACE
    rm -rf $TMP_TAR_DIR
    rm -rf $BUILD_DIR/xen-tools-compile.sh
-   echo "Xen Tools Image: $XEN_TOOLS_PACKAGE_TAR"
+   [ ! -f $XEN_TOOLS_PACKAGE_TAR ] &&  echo "$XEN_TOOLS_PACKAGE_TAR not found" && exit 0
 fi

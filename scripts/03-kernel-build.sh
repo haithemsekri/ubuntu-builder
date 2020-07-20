@@ -7,7 +7,8 @@ elif [ "$TARGET_ARCH" == "arm32" ]; then
    [ -z $L_ARCH ]        && export L_ARCH="arm"
 fi
 
-if [ "$1" == "--kernel-dom0-build" ]; then
+if [ "$1" == "--all" ] || [ "$1" == "--kernel-dom0-build" ]; then
+   echo -e "\e[30;48;5;82mSetup kernel dom0\e[0m"
    [ -z $LINUX_DOM0_URL ]           && echo "LINUX_DOM0_URL not defined" && exit 0
    [ -z $LINUX_DOM0_DL_FILE ]       && LINUX_DOM0_DL_FILE="$DL_DIR/$(basename $LINUX_DOM0_URL)"
    [ ! -f $LINUX_DOM0_DL_FILE ]     && wget $LINUX_DOM0_URL -O $LINUX_DOM0_DL_FILE
@@ -16,16 +17,20 @@ if [ "$1" == "--kernel-dom0-build" ]; then
    echo "delete $LINUX_DOM0_PACKAGE_TAR"
    rm -rf "$LINUX_DOM0_PACKAGE_TAR"
    BUILD_TMP_DIR="$BUILD_DIR/linux-dom0-build"
+   CONFIGURE_CMD="make menuconfig ARCH=$L_ARCH CROSS_COMPILE=$L_CROSS_COMPILE -C $BUILD_TMP_DIR"
+   MAKE_CMD="make -j$BUILD_CPU_CORE ARCH=$L_ARCH CROSS_COMPILE=$L_CROSS_COMPILE -C $BUILD_TMP_DIR"
+   echo "CONFIGURE_CMD: $CONFIGURE_CMD"
+   echo "MAKE_CMD: $MAKE_CMD"
    if [ ! -d $BUILD_TMP_DIR ]; then
       echo "Setup: $BUILD_TMP_DIR"
       mkdir -p $BUILD_TMP_DIR
       tar -xf $LINUX_DOM0_DL_FILE -C $BUILD_TMP_DIR
       patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $LINUX_DOM0_PATCH
       cp $LINUX_DOM0_CONFIG $BUILD_TMP_DIR/.config
+      # $CONFIGURE_CMD
    fi
 
-   make menuconfig ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
-   make -j 4 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
+   $MAKE_CMD 1> /dev/null
    [ ! -f "$BUILD_TMP_DIR/$LINUX_DOM0_IMG" ] && echo "$BUILD_TMP_DIR/$LINUX_DOM0_IMG : not found"  && exit 0
    [ ! -f "$BUILD_TMP_DIR/$LINUX_DOM0_DTB" ] && echo "$BUILD_TMP_DIR/$LINUX_DOM0_DTB : not found"  && exit 0
 
@@ -40,14 +45,14 @@ if [ "$1" == "--kernel-dom0-build" ]; then
    ln -sf $LINUX_DOM0_PACKAGE_NAME.bin kernel
    ln -sf $LINUX_DOM0_PACKAGE_NAME.dtb dtb
    cd $TMP_INSTALL_DIR
-   tar -I 'pxz -T 0 -9' -cf $LINUX_DOM0_PACKAGE_TAR .
+   $TAR_CXF_CMD $LINUX_DOM0_PACKAGE_TAR .
    cd $WORKSPACE
    rm -rf $TMP_INSTALL_DIR
    [ ! -f $LINUX_DOM0_PACKAGE_TAR ] && echo "$LINUX_DOM0_PACKAGE_TAR : not found"  && exit 0
-   echo "Kernel-dom0 Image: $LINUX_DOM0_PACKAGE_TAR"
 fi
 
-if [ "$1" == "--kernel-domu-build" ]; then
+if [ "$1" == "--all" ] || [ "$1" == "--kernel-domu-build" ]; then
+   echo -e "\e[30;48;5;82mSetup kernel domu\e[0m"
    [ -z $LINUX_DOMU_URL ]           && echo "LINUX_DOMU_URL not defined" && exit 0
    [ -z $LINUX_DOMU_DL_FILE ]       && LINUX_DOMU_DL_FILE="$DL_DIR/$(basename $LINUX_DOMU_URL)"
    [ ! -f $LINUX_DOMU_DL_FILE ]     && wget $LINUX_DOMU_URL -O $LINUX_DOMU_DL_FILE
@@ -56,16 +61,20 @@ if [ "$1" == "--kernel-domu-build" ]; then
    echo "delete $LINUX_DOMU_PACKAGE_TAR"
    rm -rf "$LINUX_DOMU_PACKAGE_TAR"
    BUILD_TMP_DIR="$BUILD_DIR/linux-domu-build"
+   CONFIGURE_CMD="make menuconfig ARCH=$L_ARCH CROSS_COMPILE=$L_CROSS_COMPILE -C $BUILD_TMP_DIR"
+   MAKE_CMD="make -j$BUILD_CPU_CORE ARCH=$L_ARCH CROSS_COMPILE=$L_CROSS_COMPILE -C $BUILD_TMP_DIR"
+   echo "CONFIGURE_CMD: $CONFIGURE_CMD"
+   echo "MAKE_CMD: $MAKE_CMD"
    if [ ! -d $BUILD_TMP_DIR ]; then
       echo "Setup: $BUILD_TMP_DIR"
       mkdir -p $BUILD_TMP_DIR
       tar -xf $LINUX_DOMU_DL_FILE -C $BUILD_TMP_DIR
       patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $LINUX_DOMU_PATCH
       cp $LINUX_DOMU_CONFIG $BUILD_TMP_DIR/.config
+      # $CONFIGURE_CMD
    fi
 
-   make menuconfig ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
-   make -j 4 ARCH="$L_ARCH" CROSS_COMPILE="$L_CROSS_COMPILE" -C $BUILD_TMP_DIR
+   $MAKE_CMD 1> /dev/null
    [ ! -f "$BUILD_TMP_DIR/$LINUX_DOMU_IMG" ] && echo "$BUILD_TMP_DIR/$LINUX_DOMU_IMG : not found"  && exit 0
 
    TMP_INSTALL_DIR="$BUILD_DIR/kernel-install-tmp"
@@ -78,9 +87,8 @@ if [ "$1" == "--kernel-domu-build" ]; then
    cd $TMP_INSTALL_DIR/boot/
    ln -sf $LINUX_DOMU_PACKAGE_NAME.bin kernel
    cd $TMP_INSTALL_DIR
-   tar -I 'pxz -T 0 -9' -cf $LINUX_DOMU_PACKAGE_TAR .
+   $TAR_CXF_CMD $LINUX_DOMU_PACKAGE_TAR .
    cd $WORKSPACE
    rm -rf $TMP_INSTALL_DIR
    [ ! -f $LINUX_DOMU_PACKAGE_TAR ] && echo "$LINUX_DOMU_PACKAGE_TAR : not found"  && exit 0
-   echo "Kernel-domu Image: $LINUX_DOMU_PACKAGE_TAR"
 fi
