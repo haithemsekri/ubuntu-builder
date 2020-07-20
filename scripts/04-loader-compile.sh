@@ -1,5 +1,5 @@
 #!/bin/bash
-## apt-get --no-install-recommends install python python-dev python3-dev lib32z1 swig device-tree-compiler
+## apt-get --no-install-recommends install python python-dev python3-dev lib32z1 swig device-tree-compiler libssl-dev libncurses-dev acpica-tools bison flex
 
 if [ "$1" == "--all" ] || [ "$1" == "--loader-build" ]; then
    echo -e "\e[30;48;5;82mSetup boot loader\e[0m"

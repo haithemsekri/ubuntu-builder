@@ -69,7 +69,6 @@ if [ "$1" == "--all" ] || [ "$1" == "--kernel-domu-build" ]; then
       echo "Setup: $BUILD_TMP_DIR"
       mkdir -p $BUILD_TMP_DIR
       tar -xf $LINUX_DOMU_DL_FILE -C $BUILD_TMP_DIR
-      patch --verbose $BUILD_TMP_DIR/include/xen/interface/io/blkif.h $LINUX_DOMU_PATCH
       cp $LINUX_DOMU_CONFIG $BUILD_TMP_DIR/.config
       [ -f $LINUX_DOMU_PATCH ] &&  echo "linux domu patch" && patch --verbose -d $BUILD_TMP_DIR -p1 < $LINUX_DOMU_PATCH
       # $CONFIGURE_CMD
